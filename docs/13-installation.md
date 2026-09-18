@@ -193,6 +193,14 @@ echo "ROOMOS_DIR=$HOME/roomboard" >> .env
 sudo ./svc.sh install "$USER" && sudo ./svc.sh start
 ```
 
+> **Utiliser un clone dédié au déploiement, distinct de celui où l'on développe.**
+> Le workflow fait `git reset --hard origin/main` : sur le clone de travail, il
+> effacerait sans prévenir toute modification non commitée. Le nom de projet Docker
+> vient du dossier `deploy/` dans les deux cas, donc les deux clones pilotent bien
+> la même pile et les mêmes volumes — il n'y a pas de duplication.
+>
+> Penser à y copier `deploy/.env`, qui n'est pas versionné.
+
 > La reconstruction de l'image compile le front **et** le Core sur la VM. Avec 3,8 Go
 > de RAM, c'est le moment le plus tendu : un `docker builder prune -af` de temps en
 > temps évite de se faire tuer par le gestionnaire de mémoire.
