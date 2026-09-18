@@ -63,8 +63,27 @@ invitation à ajouter Plex.
 - Polling de `GET /me/player` toutes les 3 s **uniquement quand une lecture est active**,
   toutes les 15 s sinon. Il n'existe pas de webhook.
 - Les commandes Player exigent un **appareil actif**. S'il n'y en a pas, `PUT /me/player/play`
-  renvoie 404. Gérer ce cas explicitement dans l'UI (« aucun appareil Spotify actif »)
-  au lieu de laisser une erreur silencieuse.
+  renvoie 404. Géré explicitement : l'UI affiche « aucun appareil actif » au lieu
+  d'une erreur.
+
+### Problème ouvert : l'appareil actif n'est pas forcément le PC
+
+Constaté en M3 : l'appareil actif était un téléphone (« S25 de Ajinthan »). Les
+endpoints Player s'appliquent à **l'appareil actif du compte**, pas à une machine
+choisie. Conséquences :
+
+- `PUT /me/player/volume` règle le volume du téléphone, pas du PC ;
+- l'étape `music.play` de la scène **Gaming** (M5) lancerait la musique sur le
+  téléphone, ce qui contredit son intention.
+
+Sans effet en M3, où l'on ne fait qu'afficher et piloter la lecture en cours. **À
+trancher avant M5.** Deux options :
+1. `PUT /me/player` (transfer) vers l'appareil dont le nom correspond au PC, avant
+   toute commande de scène. L'endpoint existe et est conservé.
+2. Accepter le comportement et ne pas mettre `music.play` dans Gaming.
+
+L'option 1 ajoute un endpoint au périmètre V1 : c'est une décision, pas une
+correction.
 
 ## Zigbee2MQTT
 

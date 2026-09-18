@@ -5,6 +5,25 @@ Toutes les évolutions notables de RoomOS. Une entrée par jalon de `docs/10-roa
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Le projet ne suit pas SemVer : il suit ses jalons.
 
+## M3 — Spotify — 2026-09-18
+
+### Ajouté
+- `IMusicProvider` et son unique implémentation, seule abstraction « provider » du
+  projet (ADR D7).
+- Flux Authorization Code + PKCE, sans secret client. Le `refresh_token` est persisté
+  et ne quitte jamais le Core.
+- Sondage adaptatif, 3 s en lecture et 15 s sinon : Spotify n'expose aucun webhook,
+  et un dashboard permanent qui interrogerait une API tierce toutes les 3 secondes
+  jour et nuit finirait limité.
+- Les réponses 204 et 404 des endpoints Player sont traduites en « aucun appareil
+  actif » plutôt qu'en erreur : c'est l'état normal quand Spotify est fermé.
+- Carte Musique : pochette en dimension fixe et chargement paresseux, titre, artiste,
+  appareil, contrôles.
+
+### Connu
+- Les endpoints Player s'appliquent à l'appareil actif du compte, qui n'est pas
+  forcément le PC. Sans effet ici, bloquant pour la scène Gaming de M5.
+
 ## M2 — Audio — 2026-09-18
 
 ### Ajouté
