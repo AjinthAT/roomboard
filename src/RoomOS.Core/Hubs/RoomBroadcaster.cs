@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
+using RoomOS.Core.Scenes;
 using RoomOS.Core.State;
 using RoomOS.Domain.Contracts;
 
@@ -10,6 +11,7 @@ namespace RoomOS.Core.Hubs;
 /// </summary>
 public sealed class RoomBroadcaster(
     StateStore state,
+    SceneEngine scenes,
     IHubContext<RoomHub> hub,
     TimeProvider time,
     ILogger<RoomBroadcaster> logger) : IHostedService
@@ -31,6 +33,11 @@ public sealed class RoomBroadcaster(
         state.AudioStateChanged += OnAudioStateChanged;
         state.NowPlayingChanged += OnNowPlayingChanged;
         state.LightStateChanged += OnLightStateChanged;
+
+        scenes.Started += p => Send(RoomProtocol.SceneStarted, p);
+        scenes.StepCompleted += p => Send(RoomProtocol.SceneStepCompleted, p);
+        scenes.Finished += p => Send(RoomProtocol.SceneFinished, p);
+
         return Task.CompletedTask;
     }
 

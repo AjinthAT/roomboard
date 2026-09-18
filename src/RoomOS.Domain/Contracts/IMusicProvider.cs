@@ -21,7 +21,22 @@ public interface IMusicProvider
     Task PreviousAsync(CancellationToken ct);
 
     Task SetVolumeAsync(int level, CancellationToken ct);
+
+    /// <summary>Appareils Spotify visibles par le compte.</summary>
+    Task<IReadOnlyList<MusicDevice>> GetDevicesAsync(CancellationToken ct);
+
+    /// <summary>
+    /// Transfère la lecture vers l'appareil dont le nom contient <paramref name="hint"/>.
+    /// </summary>
+    /// <remarks>
+    /// Les endpoints Player s'appliquent à l'appareil actif du compte, pas à une
+    /// machine choisie. Sans transfert, une scène lancerait la musique là où elle
+    /// jouait la dernière fois — un téléphone, par exemple (ADR D11).
+    /// </remarks>
+    Task TransferToAsync(string hint, CancellationToken ct);
 }
+
+public sealed record MusicDevice(string Id, string Name, bool IsActive, string Type);
 
 /// <summary>
 /// Levée quand Spotify n'a aucun appareil actif. Distincte d'une panne : c'est

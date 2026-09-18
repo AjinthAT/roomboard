@@ -12,6 +12,8 @@ using RoomOS.Core.Hubs;
 using RoomOS.Core.Integrations.Mqtt;
 using RoomOS.Core.Integrations.Spotify;
 using RoomOS.Core.Integrations.Wol;
+using RoomOS.Core.Scenes;
+using RoomOS.Core.Scenes.Executors;
 using RoomOS.Core.State;
 using RoomOS.Domain.Contracts;
 
@@ -45,6 +47,19 @@ builder.Services.AddHostedService<MusicPoller>();
 // besoin de la même instance pour publier des commandes.
 builder.Services.AddSingleton<MqttLightService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<MqttLightService>());
+
+builder.Services.AddSingleton<SceneEngine>();
+builder.Services.AddSingleton<IStepExecutor, PcWakeExecutor>();
+builder.Services.AddSingleton<IStepExecutor, PcShutdownExecutor>();
+builder.Services.AddSingleton<IStepExecutor, AudioSetOutputExecutor>();
+builder.Services.AddSingleton<IStepExecutor, AudioSetVolumeExecutor>();
+builder.Services.AddSingleton<IStepExecutor, AudioSetMuteExecutor>();
+builder.Services.AddSingleton<IStepExecutor, LightSetExecutor>();
+builder.Services.AddSingleton<IStepExecutor, MusicTransferExecutor>();
+builder.Services.AddSingleton<IStepExecutor, MusicPlayExecutor>();
+builder.Services.AddSingleton<IStepExecutor, MusicPauseExecutor>();
+builder.Services.AddSingleton<IStepExecutor, MusicSetVolumeExecutor>();
+builder.Services.AddSingleton<IStepExecutor, DelayExecutor>();
 builder.Services.AddHostedService<RoomBroadcaster>();
 
 builder.Services.AddSignalR();
@@ -90,6 +105,7 @@ app.MapPcEndpoints();
 app.MapAudioEndpoints();
 app.MapMusicEndpoints();
 app.MapLightEndpoints();
+app.MapSceneEndpoints();
 
 app.MapHub<RoomHub>("/hub/room");
 app.MapHub<AgentHub>("/hub/agent");

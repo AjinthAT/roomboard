@@ -14,6 +14,7 @@ public sealed record StateSnapshot(
     IReadOnlyDictionary<string, AudioSnapshot> Audio,
     IReadOnlyList<LightSnapshot> Lights,
     MusicState Music,
+    IReadOnlyList<SceneInfo> Scenes,
     DateTimeOffset ServerTime);
 
 /// <summary>État audio d'un PC, indexé par son identifiant dans le snapshot.</summary>

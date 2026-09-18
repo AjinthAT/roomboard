@@ -64,6 +64,10 @@ public static class DatabaseSeeder
         await SeedAudioOutputsAsync(db, options, ct);
         await SeedLightsAsync(db, options, ct);
 
+        // Après les lampes : les scènes sont construites à partir des appareils déclarés.
+        await db.SaveChangesAsync(ct);
+        await SceneSeed.SeedAsync(db, options, ct);
+
         await db.SaveChangesAsync(ct);
     }
 

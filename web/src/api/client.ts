@@ -80,6 +80,12 @@ export function setLight(id: string, command: LightCommand): Promise<unknown> {
   });
 }
 
+export function runScene(id: string): Promise<{ runId: string }> {
+  return request<{ runId: string }>(`/api/scenes/${encodeURIComponent(id)}/run`, {
+    method: 'POST',
+  });
+}
+
 export type MusicAction = 'play' | 'pause' | 'next' | 'previous';
 
 export function runMusicAction(action: MusicAction): Promise<unknown> {

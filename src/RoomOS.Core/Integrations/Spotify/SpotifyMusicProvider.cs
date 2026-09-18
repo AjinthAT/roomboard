@@ -85,6 +85,70 @@ public sealed class SpotifyMusicProvider(
     public Task SetVolumeAsync(int level, CancellationToken ct) =>
         SendAsync(HttpMethod.Put, $"/me/player/volume?volume_percent={Math.Clamp(level, 0, 100)}", null, ct);
 
+    public async Task<IReadOnlyList<MusicDevice>> GetDevicesAsync(CancellationToken ct)
+    {
+        var client = await AuthorizedClientAsync(ct);
+
+        if (client is null)
+        {
+            return [];
+        }
+
+        using (client)
+        {
+            using var response = await client.GetAsync($"{ApiBase}/me/player/devices", ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return [];
+            }
+
+            var json = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
+
+            if (json.GetPropertyOrNull("devices") is not { ValueKind: JsonValueKind.Array } devices)
+            {
+                return [];
+            }
+
+            return [.. devices.EnumerateArray().Select(d => new MusicDevice(
+                d.GetPropertyOrNull("id")?.GetString() ?? string.Empty,
+                d.GetPropertyOrNull("name")?.GetString() ?? string.Empty,
+                d.GetPropertyOrNull("is_active")?.GetBoolean() ?? false,
+                d.GetPropertyOrNull("type")?.GetString() ?? string.Empty))];
+        }
+    }
+
+    public async Task TransferToAsync(string hint, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(hint))
+        {
+            throw new InvalidOperationException(
+                "ROOMOS__Spotify__PcDeviceHint n'est pas configuré.");
+        }
+
+        var devices = await GetDevicesAsync(ct);
+
+        var target = devices.FirstOrDefault(
+            d => d.Name.Contains(hint, StringComparison.OrdinalIgnoreCase));
+
+        if (target is null)
+        {
+            throw new NoActiveMusicDeviceException();
+        }
+
+        if (target.IsActive)
+        {
+            // Idempotence : relancer une scène alors que tout est déjà en place ne
+            // doit rien casser (docs/08-scenes.md, règle 6).
+            return;
+        }
+
+        // play: false — on transfère sans forcer la lecture. L'étape music.play qui
+        // suit décide, ou n'existe pas.
+        await SendAsync(HttpMethod.Put, "/me/player",
+            new { device_ids = new[] { target.Id }, play = false }, ct);
+    }
+
     private async Task SendAsync(HttpMethod method, string path, object? body, CancellationToken ct)
     {
         var client = await AuthorizedClientAsync(ct)

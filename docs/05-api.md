@@ -31,6 +31,7 @@ L'agent utilise un token distinct (`ROOMOS__AgentToken`).
 | GET | `/api/lights` | Liste + états |
 | PUT | `/api/lights/{id}` | `{ "on": true, "brightness": 40, "colorHex": "#FF6A00" }` |
 | GET | `/api/music/now-playing` | `NowPlaying` |
+| GET | `/api/music/devices` | Appareils Spotify visibles, pour renseigner `PcDeviceHint` |
 | POST | `/api/music/play` | `{ "uri": "spotify:playlist:..." }` (uri optionnel) |
 | POST | `/api/music/pause` | |
 | POST | `/api/music/next` | |
