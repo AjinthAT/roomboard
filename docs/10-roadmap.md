@@ -214,13 +214,41 @@ réellement la sortie audio, le volume et l'état du PC.
   température ; en ajouter un avant d'avoir jugé le rendu réel serait prématuré.
 
 ## M6 — Durcissement
-- [ ] `/metrics` Prometheus sur le Core et l'agent
-- [ ] Prometheus + Grafana dans le compose, un dashboard
-- [ ] Tailscale → certificat valide → service worker + manifest PWA
-- [ ] Déploiement automatique via runner self-hosted
-- [ ] README d'installation et de restauration
+- [x] `/metrics` Prometheus sur le Core — **pas sur l'agent**, voir ci-dessous
+- [x] Prometheus + Grafana dans le compose, un tableau de bord provisionné
+- [x] Manifest PWA, icônes et service worker — **Tailscale reste à faire**
+- [x] Déploiement automatique via runner self-hosted
+- [x] README d'installation et de restauration
 
 **DoD** : tu réinstalles la VM à partir du repo en moins de 30 minutes.
+
+Vérifié le 2026-09-19 :
+- `/metrics` sort les vraies valeurs au format Prometheus, point décimal compris —
+  la VM est en français, la virgule aurait tout cassé. 3 tests de format.
+- Prometheus scrute le Core par `host-gateway` et stocke : 12 séries `roomos_*`.
+- Grafana provisionne seul sa source de données et son tableau de bord.
+- **Sauvegarde et restauration éprouvées pour de vrai** : base détruite puis
+  restaurée, les 4 scènes et l'autorisation Spotify survivent.
+- Runner auto-hébergé `roomos-vm` en ligne, en service systemd.
+
+Reste à faire, et **cela dépend de toi** :
+- [ ] Tailscale : authentification de la machine, puis certificat. Procédure dans
+      `13-installation.md`. Sans lui, le service worker reste dormant — il ne
+      s'enregistre qu'en contexte sécurisé, sans que le code change.
+
+### Décisions prises pendant M6
+- **Aucune bibliothèque de métriques.** Le format texte de Prometheus est une ligne
+  par échantillon, et nos métriques sont une poignée de jauges déjà en mémoire. Une
+  dépendance apporterait compteurs, histogrammes et registre global, sans usage ici.
+- **Pas de `/metrics` sur l'agent**, contrairement à la roadmap initiale. L'agent ne
+  connaît rien que le Core n'ait déjà, puisqu'il lui pousse tout. Un serveur HTTP dans
+  un service Windows pour réexposer les mêmes chiffres, c'est du code et une surface
+  réseau de plus pour zéro information.
+- **Le service worker ne met en cache que la coquille**, jamais l'API ni les hubs. Un
+  dashboard qui afficherait l'état périmé d'un PC mentirait, ce que tout le projet
+  cherche à éviter.
+- **Le déploiement met à jour le clone canonique de la VM**, pas l'espace de travail
+  du runner : un checkout là-bas lancerait une seconde pile à côté de la vraie.
 
 ## Après M6 — à discuter, pas à coder
 

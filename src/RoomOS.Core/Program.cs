@@ -10,6 +10,7 @@ using RoomOS.Core.Configuration;
 using RoomOS.Core.Data;
 using RoomOS.Core.Hubs;
 using RoomOS.Core.Integrations.Mqtt;
+using RoomOS.Core.Observability;
 using RoomOS.Core.Integrations.Spotify;
 using RoomOS.Core.Integrations.Wol;
 using RoomOS.Core.Scenes;
@@ -106,6 +107,7 @@ app.MapAudioEndpoints();
 app.MapMusicEndpoints();
 app.MapLightEndpoints();
 app.MapSceneEndpoints();
+app.MapMetricsEndpoint();
 
 app.MapHub<RoomHub>("/hub/room");
 app.MapHub<AgentHub>("/hub/agent");

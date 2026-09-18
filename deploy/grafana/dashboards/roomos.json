@@ -1,0 +1,163 @@
+{
+  "uid": "roomos",
+  "title": "RoomOS",
+  "tags": [
+    "roomos"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Températures",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "roomos_cpu_temperature_celsius",
+          "legendFormat": "CPU",
+          "refId": "A"
+        },
+        {
+          "expr": "roomos_gpu_temperature_celsius",
+          "legendFormat": "GPU",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Charge",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "roomos_cpu_usage_percent",
+          "legendFormat": "CPU",
+          "refId": "A"
+        },
+        {
+          "expr": "roomos_gpu_usage_percent",
+          "legendFormat": "GPU",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Mémoire du PC",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "roomos_ram_used_megabytes",
+          "legendFormat": "RAM utilisée",
+          "refId": "A"
+        },
+        {
+          "expr": "roomos_ram_total_megabytes",
+          "legendFormat": "RAM totale",
+          "refId": "B"
+        },
+        {
+          "expr": "roomos_vram_used_megabytes",
+          "legendFormat": "VRAM utilisée",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Disponibilité",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 7,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "roomos_pc_online",
+          "legendFormat": "PC en ligne",
+          "refId": "A"
+        },
+        {
+          "expr": "roomos_agents_connected",
+          "legendFormat": "Agents connectés",
+          "refId": "B"
+        },
+        {
+          "expr": "roomos_light_reachable",
+          "legendFormat": "Lampe joignable",
+          "refId": "C"
+        },
+        {
+          "expr": "roomos_music_playing",
+          "legendFormat": "Lecture en cours",
+          "refId": "D"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39
+}
