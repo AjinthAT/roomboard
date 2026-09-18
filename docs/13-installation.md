@@ -147,7 +147,33 @@ RoomOS consomme le réseau Zigbee, il ne l'administre pas.
 Le nom donné à une ampoule dans Z2M doit correspondre à
 `ROOMOS__Lights__0__Z2mFriendlyName`.
 
-## 7. Supervision
+## 7. Accès distant et HTTPS (Tailscale)
+
+Facultatif, mais c'est ce qui débloque le mode hors-ligne de la PWA : un service
+worker exige un contexte sécurisé, et Tailscale fournit un certificat valide sans
+toucher à Let's Encrypt ni exposer quoi que ce soit sur Internet (ADR D9).
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up            # affiche un lien à ouvrir pour authentifier la machine
+```
+
+Activer HTTPS dans la console d'administration Tailscale (*DNS → HTTPS
+Certificates*), puis :
+
+```bash
+sudo tailscale cert "$(tailscale status --json | python3 -c 'import json,sys; print(json.load(sys.stdin)["Self"]["DNSName"].rstrip("."))')"
+sudo tailscale serve --bg --https=443 http://127.0.0.1:8080
+```
+
+L'iPad, connecté au même réseau Tailscale, charge alors
+`https://vm-102.<ton-tailnet>.ts.net`. Le service worker s'active tout seul : il
+n'est enregistré qu'en contexte sécurisé, et rien dans le code ne change.
+
+> **Le jeton d'API reste la seule authentification.** Tailscale apporte le chiffrement
+> et la joignabilité, pas le contrôle d'accès applicatif.
+
+## 8. Supervision
 
 Grafana sur `http://192.168.1.x:3000`, identifiant `admin`, mot de passe
 `GRAFANA_PASSWORD`. Le tableau de bord et la source de données sont provisionnés

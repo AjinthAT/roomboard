@@ -5,6 +5,36 @@ Toutes les évolutions notables de RoomOS. Une entrée par jalon de `docs/10-roa
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Le projet ne suit pas SemVer : il suit ses jalons.
 
+## M6 — Durcissement — 2026-09-19
+
+### Ajouté
+- **`/metrics` au format Prometheus**, écrit à la main. Aucune bibliothèque : le
+  format est une ligne par échantillon et nos métriques sont une poignée de jauges
+  déjà en mémoire. Les températures restent nullables — un capteur absent n'émet pas
+  d'échantillon plutôt qu'un zéro que Grafana tracerait comme une mesure.
+- **Prometheus et Grafana** dans le `docker compose`, avec source de données et
+  tableau de bord provisionnés. C'est Prometheus qui garde l'historique, pas RoomOS
+  (ADR D6).
+- **Manifest PWA, icônes et service worker.** Le service worker ne met en cache que
+  la coquille, jamais l'API ni les hubs, et ne s'enregistre qu'en contexte sécurisé.
+- **Déploiement automatique** sur runner auto-hébergé, conditionné à une CI verte.
+- **`docs/13-installation.md`** : installation complète et restauration, éprouvées.
+
+### Décidé
+- **Pas de `/metrics` sur l'agent**, contrairement à la roadmap. Il ne connaît rien
+  que le Core n'ait déjà.
+
+### Corrigé
+- `index.html` référençait `/icon-180.png` depuis M0 et le fichier n'a jamais existé :
+  l'icône d'écran d'accueil de l'iPad était un 404. Icônes générées par un encodeur
+  PNG écrit à la main, la VM n'ayant aucune bibliothèque d'image.
+- **La CI n'avait jamais tourné, et elle était cassée.** `dotnet restore` recevait
+  deux projets alors que MSBuild n'en accepte qu'un : le job `core` échouait depuis
+  M0. Invisible en local, où la solution entière est toujours construite d'un bloc.
+- Procédure de sauvegarde corrigée avant publication : SQLite tourne en mode WAL,
+  copier les fichiers sans arrêter le Core peut capturer un instantané incohérent —
+  ce qui ne se découvre que le jour où la sauvegarde sert.
+
 ## Après M5 — Spotify enrichi — 2026-09-19
 
 Quatre ajouts qui exploitent ce que M3 récupérait déjà sans l'afficher.
