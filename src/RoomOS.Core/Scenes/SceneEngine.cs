@@ -23,6 +23,13 @@ public sealed class SceneEngine
     private readonly TimeProvider _time;
     private readonly ILogger<SceneEngine> _logger;
 
+    /// <summary>
+    /// Nombre d'exécutions conservées. <c>GET /api/scenes/runs/{runId}</c> sert à
+    /// suivre une scène en cours ou tout juste finie, pas à tenir un historique :
+    /// sans plafond, un panneau utilisé tous les jours accumule sans fin.
+    /// </summary>
+    private const int RetainedRuns = 20;
+
     private readonly ConcurrentDictionary<string, SceneRun> _runs = new();
     private readonly Lock _gate = new();
 
@@ -64,6 +71,7 @@ public sealed class SceneEngine
 
         var run = new SceneRun(runId, sceneId, SceneRunStatus.Running, [], _time.GetUtcNow());
         _runs[runId] = run;
+        Trim();
 
         Started?.Invoke(new SceneStarted(runId, sceneId));
 
@@ -110,8 +118,10 @@ public sealed class SceneEngine
         }
         finally
         {
-            cts.Dispose();
-
+            // Libérer le jeton sous verrou avant de le disposer. Dans l'ordre inverse,
+            // une scène lancée entre les deux prend le verrou, voit encore ce jeton et
+            // appelle Cancel() sur un objet déjà libéré — ObjectDisposedException, donc
+            // 500 sur l'API, précisément quand on enchaîne deux scènes.
             lock (_gate)
             {
                 if (ReferenceEquals(_current, cts))
@@ -119,9 +129,11 @@ public sealed class SceneEngine
                     _current = null;
                 }
             }
+
+            cts.Dispose();
         }
 
-        _runs[runId] = _runs[runId] with { Status = status, Steps = results };
+        Update(runId, run => run with { Status = status, Steps = results });
         Finished?.Invoke(new SceneFinished(runId, status.ToString()));
 
         _logger.LogInformation("Scène {RunId} terminée : {Status}.", runId, status);
@@ -174,9 +186,43 @@ public sealed class SceneEngine
         }
     }
 
+    /// <summary>
+    /// Met à jour une exécution si elle est encore conservée.
+    /// </summary>
+    /// <remarks>
+    /// Une scène très longue peut être purgée avant de finir, si beaucoup d'autres
+    /// démarrent entre-temps. L'indexeur lèverait alors <c>KeyNotFoundException</c>
+    /// et ferait tomber la scène en cours d'exécution : on ignore silencieusement,
+    /// c'est une trace perdue, pas un effet manqué.
+    /// </remarks>
+    private void Update(string runId, Func<SceneRun, SceneRun> change)
+    {
+        if (_runs.TryGetValue(runId, out var run))
+        {
+            _runs[runId] = change(run);
+        }
+    }
+
+    /// <summary>Ne garde que les exécutions les plus récentes.</summary>
+    private void Trim()
+    {
+        if (_runs.Count <= RetainedRuns)
+        {
+            return;
+        }
+
+        foreach (var old in _runs.Values
+            .OrderByDescending(r => r.StartedAt)
+            .Skip(RetainedRuns)
+            .ToList())
+        {
+            _runs.TryRemove(old.RunId, out _);
+        }
+    }
+
     private void Publish(string runId, List<SceneStepResult> results, SceneStepResult result)
     {
-        _runs[runId] = _runs[runId] with { Steps = [.. results] };
+        Update(runId, run => run with { Steps = [.. results] });
 
         StepCompleted?.Invoke(new SceneStepCompleted(
             runId, result.Index, result.Status.ToString(), result.Message));

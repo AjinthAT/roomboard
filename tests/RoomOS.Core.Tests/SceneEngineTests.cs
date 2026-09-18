@@ -179,6 +179,27 @@ public sealed class SceneEngineTests
         Assert.All(executors, e => Assert.Single(e.Calls));
     }
 
+    /// <summary>
+    /// Les exécutions vivent en mémoire. Sans plafond, un panneau utilisé tous les
+    /// jours accumulerait sans fin.
+    /// </summary>
+    [Fact]
+    public async Task Les_anciennes_executions_sont_purgees()
+    {
+        var engine = NewEngine();
+        var ids = new List<string>();
+
+        for (var i = 0; i < 25; i++)
+        {
+            var run = await RunToEndAsync(engine, $"scene-{i}", new SceneDefinition([]));
+            ids.Add(run.RunId);
+        }
+
+        // Les 20 dernières restent consultables, les 5 premières ont disparu.
+        Assert.All(ids.TakeLast(20), id => Assert.NotNull(engine.GetRun(id)));
+        Assert.All(ids.Take(5), id => Assert.Null(engine.GetRun(id)));
+    }
+
     [Fact]
     public async Task Un_type_sans_executeur_echoue_sans_faire_tomber_la_scene()
     {
