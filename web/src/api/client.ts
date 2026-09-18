@@ -1,5 +1,5 @@
 import { readToken } from './token';
-import type { StateSnapshot } from './types';
+import type { MusicDevice, Playlist, StateSnapshot } from './types';
 
 /**
  * Le front n'appelle que le Core, sur la même origine : pas de base URL,
@@ -90,4 +90,36 @@ export type MusicAction = 'play' | 'pause' | 'next' | 'previous';
 
 export function runMusicAction(action: MusicAction): Promise<unknown> {
   return request(`/api/music/${action}`, { method: 'POST' });
+}
+
+export function getMusicDevices(signal?: AbortSignal): Promise<MusicDevice[]> {
+  return request<MusicDevice[]>('/api/music/devices', { signal });
+}
+
+export function getPlaylists(signal?: AbortSignal): Promise<Playlist[]> {
+  return request<Playlist[]>('/api/music/playlists', { signal });
+}
+
+export function transferMusic(deviceId: string): Promise<unknown> {
+  return request('/api/music/transfer', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ deviceId }),
+  });
+}
+
+export function playUri(uri: string): Promise<unknown> {
+  return request('/api/music/play', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uri }),
+  });
+}
+
+export function setMusicVolume(level: number): Promise<unknown> {
+  return request('/api/music/volume', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ level }),
+  });
 }

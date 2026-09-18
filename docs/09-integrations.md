@@ -45,15 +45,26 @@ Une seule implémentation en V1 : `SpotifyMusicProvider`. N'en crée pas d'autre
 L'interface est une assurance contre un changement de politique Spotify, pas une
 invitation à ajouter Plex.
 
+### Fonctions ajoutées après M5
+
+- **Progression du morceau** : position poussée au changement de morceau et toutes
+  les 15 s, interpolée entre-temps côté client. Un déplacement manuel dans le morceau
+  n'est donc reflété qu'au battement suivant, soit 15 s au pire. C'est le compromis
+  retenu face à vingt messages par minute.
+- **Volume Spotify** via `PUT /me/player/volume`, distinct du volume Windows.
+- **Sélecteur d'appareil** via `POST /api/music/transfer`, qui réutilise le transfert
+  ajouté pour les scènes (ADR D11).
+- **Playlists** déclarées dans la configuration, jouées via `music.play` avec un URI.
+
 ### Implémentation
 
 - Flux **Authorization Code + PKCE**, une fois, depuis un navigateur.
 - **Redirect URI : `http://127.0.0.1:8080/api/music/callback`**, et rien d'autre.
   Spotify impose HTTPS pour toute adresse non-loopback depuis 2025. Une route directe
-  du Core en `http://192.168.1.30:8080/...` est **refusée**, et `localhost` l'est aussi :
+  du Core en `http://192.168.1.x:8080/...` est **refusée**, et `localhost` l'est aussi :
   seule l'IP de bouclage littérale est acceptée en HTTP.
 - Conséquence pratique : le Core n'ayant pas de navigateur, l'autorisation se fait
-  depuis le PC à travers un tunnel SSH — `ssh -L 8080:127.0.0.1:8080 ajin@192.168.1.30`
+  depuis le PC à travers un tunnel SSH — `ssh -L 8080:127.0.0.1:8080 user@192.168.1.x`
   — de sorte que `127.0.0.1:8080` dans le navigateur atteigne bien le Core. Une seule
   fois, à la mise en service.
 - Scopes : `user-read-playback-state`, `user-modify-playback-state`,
@@ -68,7 +79,7 @@ invitation à ajouter Plex.
 
 ### Problème ouvert : l'appareil actif n'est pas forcément le PC
 
-Constaté en M3 : l'appareil actif était un téléphone (« S25 de Ajinthan »). Les
+Constaté en M3 : l'appareil actif était un téléphone (« un téléphone Android »). Les
 endpoints Player s'appliquent à **l'appareil actif du compte**, pas à une machine
 choisie. Conséquences :
 

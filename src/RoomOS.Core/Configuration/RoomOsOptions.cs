@@ -80,7 +80,21 @@ public sealed class SpotifyOptions
     /// </summary>
     public string PcDeviceHint { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Playlists mises en avant dans l'UI. Vide par défaut, comme les autres listes :
+    /// le binder de configuration ajoute aux collections au lieu de les remplacer.
+    /// </summary>
+    public List<PlaylistOptions> Playlists { get; set; } = [];
+
     public bool IsConfigured => !string.IsNullOrWhiteSpace(ClientId);
+}
+
+public sealed class PlaylistOptions
+{
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>URI Spotify, de la forme <c>spotify:playlist:…</c>.</summary>
+    public string Uri { get; set; } = string.Empty;
 }
 
 public sealed class AudioOutputOptions

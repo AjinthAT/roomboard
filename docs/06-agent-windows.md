@@ -95,7 +95,7 @@ problème se confirme, le contournement est de relancer la lecture après la bas
 
 `appsettings.json` à côté de l'exe :
 ```json
-{ "Core": { "Url": "http://192.168.1.30:8080", "AgentToken": "...", "PcId": "gaming-pc" },
+{ "Core": { "Url": "http://192.168.1.x:8080", "AgentToken": "...", "PcId": "gaming-pc" },
   "Telemetry": { "IntervalMs": 2000 } }
 ```
 
