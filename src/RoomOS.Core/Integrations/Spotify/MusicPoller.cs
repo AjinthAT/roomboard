@@ -37,6 +37,13 @@ public sealed class MusicPoller(
         }
     }
 
+    /// <summary>
+    /// Vrai tant que le dernier sondage a échoué. Sert à ne journaliser qu'à la
+    /// bascule : une panne de Spotify produirait sinon une ligne toutes les 15 s,
+    /// indéfiniment.
+    /// </summary>
+    private bool _failing;
+
     private async Task<bool> PollAsync(CancellationToken ct)
     {
         try
@@ -47,6 +54,12 @@ public sealed class MusicPoller(
             var music = await provider.GetStateAsync(ct);
             state.SetMusic(music);
 
+            if (_failing)
+            {
+                _failing = false;
+                logger.LogInformation("Spotify répond à nouveau.");
+            }
+
             return music.NowPlaying.IsPlaying;
         }
         catch (OperationCanceledException)
@@ -55,9 +68,18 @@ public sealed class MusicPoller(
         }
         catch (Exception ex)
         {
-            // Spotify indisponible ne doit pas arrêter le sondage : on réessaiera au
-            // rythme lent, sans bruit dans les journaux.
-            logger.LogDebug(ex, "Sondage Spotify en échec.");
+            // Une panne de Spotify n'arrête pas le sondage, mais elle ne doit pas être
+            // muette non plus : journaliser en Debug la rendait invisible au niveau
+            // par défaut, ce qui revient à avaler l'exception.
+            //
+            // L'état connu du StateStore est conservé : mieux vaut un affichage
+            // légèrement périmé qu'une carte vidée à chaque hoquet réseau.
+            if (!_failing)
+            {
+                _failing = true;
+                logger.LogWarning(ex, "Sondage Spotify en échec, tentatives poursuivies.");
+            }
+
             return false;
         }
     }

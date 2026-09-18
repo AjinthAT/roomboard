@@ -20,6 +20,19 @@ Le projet ne suit pas SemVer : il suit ses jalons.
 - Carte Musique : pochette en dimension fixe et chargement paresseux, titre, artiste,
   appareil, contrôles.
 
+### Corrigé à l'audit
+- **Un refus de Spotify s'affichait comme « aucun appareil actif ».** Un 403 — compte
+  absent de la liste d'utilisateurs autorisés, le piège le plus fréquent du mode
+  développement — était indiscernable d'une simple absence de lecture. Nouvel état
+  `Denied`, avec l'explication à l'écran.
+- **Les échecs du sondage étaient journalisés en `Debug`**, donc invisibles au niveau
+  par défaut : un `catch` silencieux déguisé, que `11-conventions.md` interdit. Passés
+  en avertissement, une seule fois à la bascule plutôt qu'à chaque tentative.
+- **Les vérificateurs PKCE n'expiraient jamais.** Une autorisation abandonnée laissait
+  une entrée à vie, sur une route non authentifiée. Durée de vie de 10 minutes et purge.
+- Les erreurs inattendues de `GET /me/player` lèvent désormais, et l'état connu est
+  conservé plutôt que remplacé par une contre-vérité.
+
 ### Connu
 - Les endpoints Player s'appliquent à l'appareil actif du compte, qui n'est pas
   forcément le PC. Sans effet ici, bloquant pour la scène Gaming de M5.

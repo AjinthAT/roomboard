@@ -16,8 +16,7 @@ namespace RoomOS.Core.Integrations.Spotify;
 public sealed class SpotifyMusicProvider(
     IHttpClientFactory httpClientFactory,
     SpotifyAuthService auth,
-    RoomOsDbContext db,
-    ILogger<SpotifyMusicProvider> logger) : IMusicProvider
+    RoomOsDbContext db) : IMusicProvider
 {
     public const string HttpClientName = "spotify";
 
@@ -42,10 +41,20 @@ public sealed class SpotifyMusicProvider(
                 return new MusicState(MusicLinkState.NoActiveDevice, NowPlaying.Nothing);
             }
 
+            // 401 : jeton révoqué. 403 : compte hors de la liste autorisée de
+            // l'application. Les confondre avec « aucun appareil actif » enverrait
+            // chercher la panne du mauvais côté.
+            if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+            {
+                return new MusicState(MusicLinkState.Denied, NowPlaying.Nothing);
+            }
+
+            // Tout autre échec est une panne : on lève, et l'appelant conserve le
+            // dernier état connu plutôt que d'afficher une contre-vérité.
             if (!response.IsSuccessStatusCode)
             {
-                logger.LogWarning("GET /me/player : {Status}", response.StatusCode);
-                return new MusicState(MusicLinkState.NoActiveDevice, NowPlaying.Nothing);
+                throw new InvalidOperationException(
+                    $"GET /me/player a répondu {(int)response.StatusCode}.");
             }
 
             var json = await response.Content.ReadFromJsonAsync<JsonElement>(ct);
