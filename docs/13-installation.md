@@ -173,7 +173,31 @@ n'est enregistré qu'en contexte sécurisé, et rien dans le code ne change.
 > **Le jeton d'API reste la seule authentification.** Tailscale apporte le chiffrement
 > et la joignabilité, pas le contrôle d'accès applicatif.
 
-## 8. Supervision
+## 8. Déploiement automatique (facultatif)
+
+Un runner auto-hébergé sur la VM permet à `main` de se déployer seul, une fois la CI
+verte.
+
+```bash
+mkdir -p ~/actions-runner && cd ~/actions-runner
+curl -sL -o runner.tar.gz https://github.com/actions/runner/releases/latest/download/actions-runner-linux-x64.tar.gz
+tar xzf runner.tar.gz
+
+TOKEN=$(gh api -X POST repos/<owner>/<repo>/actions/runners/registration-token --jq .token)
+./config.sh --unattended --url https://github.com/<owner>/<repo> --token "$TOKEN"             --name roomos-vm --labels self-hosted,linux,x64,roomos --replace
+
+# Emplacement du clone que docker compose connaît. Propre à la machine, d'où
+# l'environnement du runner plutôt que le workflow.
+echo "ROOMOS_DIR=$HOME/roomboard" >> .env
+
+sudo ./svc.sh install "$USER" && sudo ./svc.sh start
+```
+
+> La reconstruction de l'image compile le front **et** le Core sur la VM. Avec 3,8 Go
+> de RAM, c'est le moment le plus tendu : un `docker builder prune -af` de temps en
+> temps évite de se faire tuer par le gestionnaire de mémoire.
+
+## 9. Supervision
 
 Grafana sur `http://192.168.1.x:3000`, identifiant `admin`, mot de passe
 `GRAFANA_PASSWORD`. Le tableau de bord et la source de données sont provisionnés

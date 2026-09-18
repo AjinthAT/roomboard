@@ -20,15 +20,18 @@ jobs:
       # Pas de checkout : on déploie le clone canonique de la VM, celui que
       # docker compose connaît déjà. Un checkout dans l'espace de travail du runner
       # créerait une seconde pile en parallèle de la vraie.
+      # ROOMOS_DIR vit dans l'environnement du runner (~/actions-runner/.env) :
+      # l'emplacement du clone dépend de la machine, pas du projet, et n'a rien à
+      # faire en dur dans un dépôt public.
       - name: Mettre à jour le dépôt
         run: |
-          cd ~/roomboard
+          cd "${ROOMOS_DIR:-$HOME/roomboard}"
           git fetch --quiet origin main
           git reset --hard origin/main
 
       - name: Reconstruire et redémarrer
         run: |
-          cd ~/roomboard/deploy
+          cd "${ROOMOS_DIR:-$HOME/roomboard}/deploy"
           docker compose up -d --build core
 
       - name: Vérifier que le Core répond
