@@ -73,6 +73,13 @@ public sealed class SpotifyOptions
     /// </summary>
     public string RedirectUri { get; set; } = "http://127.0.0.1:8080/api/music/callback";
 
+    /// <summary>
+    /// Fragment du nom de l'appareil Spotify correspondant au PC. Spotify nomme
+    /// généralement un appareil d'après la machine. <c>GET /api/music/devices</c>
+    /// liste les noms visibles.
+    /// </summary>
+    public string PcDeviceHint { get; set; } = string.Empty;
+
     public bool IsConfigured => !string.IsNullOrWhiteSpace(ClientId);
 }
 

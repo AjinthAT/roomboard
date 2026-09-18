@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type {
   AudioSnapshot, LightSnapshot, LightStateChanged, MusicState, PcSnapshot,
-  StateSnapshot, Telemetry,
+  SceneInfo, StateSnapshot, Telemetry,
 } from '../api/types';
 import { MusicLink } from '../api/types';
 
@@ -13,7 +13,18 @@ export type RoomState = {
   audio: AudioSnapshot | null;
   lights: LightSnapshot[];
   music: MusicState;
+  scenes: SceneInfo[];
+  /** Exécution en cours ou dernière terminée, pour le retour de progression. */
+  sceneRun: SceneRunView | null;
   connection: ConnectionStatus;
+};
+
+export type SceneRunView = {
+  runId: string;
+  sceneId: string;
+  done: number;
+  failed: number;
+  status: 'running' | 'completed' | 'failed' | 'cancelled';
 };
 
 const NO_MUSIC: MusicState = {
@@ -26,9 +37,11 @@ const NO_MUSIC: MusicState = {
 
 const NO_LIGHTS: LightSnapshot[] = [];
 
+const NO_SCENES: SceneInfo[] = [];
+
 const EMPTY: RoomState = {
   roomName: '', pc: null, audio: null, lights: NO_LIGHTS,
-  music: NO_MUSIC, connection: 'connecting',
+  music: NO_MUSIC, scenes: NO_SCENES, sceneRun: null, connection: 'connecting',
 };
 
 /**
@@ -80,6 +93,39 @@ class RoomStore {
       audio: pc ? (snapshot.audio[pc.id] ?? null) : null,
       lights: snapshot.lights,
       music: snapshot.music,
+      scenes: snapshot.scenes,
+    });
+  }
+
+  sceneStarted(runId: string, sceneId: string): void {
+    this.set({ sceneRun: { runId, sceneId, done: 0, failed: 0, status: 'running' } });
+  }
+
+  sceneStepCompleted(runId: string, status: string): void {
+    const run = this.state.sceneRun;
+
+    if (!run || run.runId !== runId) {
+      return;
+    }
+
+    this.set({
+      sceneRun: {
+        ...run,
+        done: run.done + 1,
+        failed: run.failed + (status === 'Failed' ? 1 : 0),
+      },
+    });
+  }
+
+  sceneFinished(runId: string, status: string): void {
+    const run = this.state.sceneRun;
+
+    if (!run || run.runId !== runId) {
+      return;
+    }
+
+    this.set({
+      sceneRun: { ...run, status: status.toLowerCase() as SceneRunView['status'] },
     });
   }
 

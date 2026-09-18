@@ -30,11 +30,19 @@ un interpréteur.
 | `audio.setVolume` | `deviceId`, `level` |
 | `audio.setMute` | `deviceId`, `muted` |
 | `light.set` | `deviceId`, `on`, `brightness?`, `colorHex?` |
+| `music.transfer` | — |
 | `music.play` / `music.pause` | `uri?` |
 | `music.setVolume` | `level` |
 | `delay` | `ms` |
 
 Pas d'autre type en V1. Pas de condition, pas de boucle, pas de branche.
+
+> **`music.transfer` a été ajouté en M5** (ADR D11). Les endpoints Player de Spotify
+> s'appliquent à l'appareil actif du compte, qui peut être un téléphone. Sans cette
+> étape, « Gaming » lancerait la musique ailleurs que sur le PC.
+>
+> Étape explicite plutôt que transfert implicite dans `music.play` : un DSL déclaratif
+> doit dire ce qu'il fait, et une magie cachée serait invisible à la lecture d'une scène.
 
 ## Règles d'exécution
 
@@ -78,3 +86,12 @@ s'éteint — mais la scène rapporterait un échec à chaque exécution, et une
 | **Chill** | Bureau 30 % chaud, ambiance 60 %, JBL, volume 35, playlist chill |
 | **Gaming** | PC wake, casque, volume 60, bureau 20 % rouge, ambiance off |
 | **Night** | Musique pause, toutes lampes off, **puis** PC shutdown |
+
+> **Les scènes sont générées à partir de la configuration**, pas écrites en dur : les
+> identifiants d'appareils viennent des options. Une étape visant un appareil non
+> déclaré est **omise** à la génération, pas écrite puis vouée à l'échec. Tant qu'une
+> seule ampoule est appairée, les scènes ne parlent que d'elle.
+>
+> Le blanc froid de **Work** est approché par une couleur (`#F2F6FF`) : le DSL n'a pas
+> de champ de température de couleur, et en ajouter un pour une seule scène ne se
+> justifie pas tant que le rendu réel n'a pas été jugé sur l'ampoule.

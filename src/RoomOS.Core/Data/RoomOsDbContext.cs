@@ -9,6 +9,7 @@ public sealed class RoomOsDbContext(DbContextOptions<RoomOsDbContext> options) :
     public DbSet<Device> Devices => Set<Device>();
     public DbSet<AudioOutput> AudioOutputs => Set<AudioOutput>();
     public DbSet<IntegrationToken> IntegrationTokens => Set<IntegrationToken>();
+    public DbSet<Scene> Scenes => Set<Scene>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -52,6 +53,23 @@ public sealed class RoomOsDbContext(DbContextOptions<RoomOsDbContext> options) :
             output.HasOne<Device>()
                 .WithMany()
                 .HasForeignKey(o => o.PcDeviceId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Scene>(scene =>
+        {
+            scene.ToTable("scenes");
+            scene.HasKey(s => s.Id);
+            scene.Property(s => s.Id).HasColumnName("id");
+            scene.Property(s => s.RoomId).HasColumnName("room_id").IsRequired();
+            scene.Property(s => s.Name).HasColumnName("name").IsRequired();
+            scene.Property(s => s.Icon).HasColumnName("icon").IsRequired();
+            scene.Property(s => s.StepsJson).HasColumnName("steps_json").IsRequired();
+            scene.Property(s => s.SortOrder).HasColumnName("sort_order");
+
+            scene.HasOne<Room>()
+                .WithMany()
+                .HasForeignKey(s => s.RoomId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

@@ -11,6 +11,9 @@ public static class RoomProtocol
     public const string AudioStateChanged = "AudioStateChanged";
     public const string NowPlayingChanged = "NowPlayingChanged";
     public const string LightStateChanged = "LightStateChanged";
+    public const string SceneStarted = "SceneStarted";
+    public const string SceneStepCompleted = "SceneStepCompleted";
+    public const string SceneFinished = "SceneFinished";
 }
 
 public sealed record PcStateChanged(string Id, bool Online, long? UptimeSec);

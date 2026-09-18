@@ -185,12 +185,33 @@ portée radio, et le comportement réel de l'ampoule. Tout cela demande le maté
   calcul pur, et une erreur y serait silencieuse.
 
 ## M5 — Scènes
-- [ ] Moteur de scènes + exécuteurs
-- [ ] Tests unitaires du moteur (liste dans `08-scenes.md`)
-- [ ] Les 4 scènes en base, barre de scènes dans l'UI
-- [ ] Retour de progression par étape
+- [x] Moteur de scènes + exécuteurs
+- [x] Tests unitaires du moteur (liste dans `08-scenes.md`)
+- [x] Les 4 scènes en base, barre de scènes dans l'UI
+- [x] Retour de progression par étape
 
 **DoD** : « Gaming » sur un PC éteint aboutit à un poste prêt sans intervention.
+
+Vérifié le 2026-09-18 :
+- **55 tests**, dont 7 sur le moteur et 8 sur le parsing du DSL. La liste de cas de
+  `08-scenes.md` est couverte : scène vide, étape en échec qui n'interrompt pas,
+  `pc.wake` en timeout qui interrompt et saute la suite, annulation par une nouvelle
+  scène, routage de chaque type vers son exécuteur.
+- Les quatre scènes sont générées depuis la configuration et servies par l'API.
+
+Reste à éprouver, et **c'est à l'utilisateur d'appuyer** : lancer une scène change
+réellement la sortie audio, le volume et l'état du PC.
+- [ ] « Work » depuis l'iPad
+- [ ] « Gaming » sur un PC éteint — le vrai critère de la DoD
+- [ ] « Night », qui éteint le PC
+
+### Décisions prises pendant M5
+- **`music.transfer` ajouté au DSL** (ADR D11), en étape explicite plutôt qu'en
+  transfert implicite dans `music.play`.
+- **Les scènes sont générées depuis la configuration**, et une étape visant un
+  appareil non déclaré est omise plutôt qu'écrite puis vouée à l'échec.
+- **Le blanc froid est approché par une couleur.** Le DSL n'a pas de champ de
+  température ; en ajouter un avant d'avoir jugé le rendu réel serait prématuré.
 
 ## M6 — Durcissement
 - [ ] `/metrics` Prometheus sur le Core et l'agent

@@ -66,12 +66,28 @@ export type LightSnapshot = {
   supportsBrightness: boolean;
 };
 
+export type SceneInfo = {
+  id: string;
+  name: string;
+  icon: string;
+};
+
+export type SceneStarted = { runId: string; sceneId: string };
+export type SceneStepCompleted = {
+  runId: string;
+  stepIndex: number;
+  status: string;
+  message: string | null;
+};
+export type SceneFinished = { runId: string; status: string };
+
 export type StateSnapshot = {
   room: { id: string; name: string };
   pcs: PcSnapshot[];
   audio: Record<string, AudioSnapshot>;
   lights: LightSnapshot[];
   music: MusicState;
+  scenes: SceneInfo[];
   serverTime: string;
 };
 

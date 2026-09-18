@@ -62,6 +62,7 @@ public static class StateEndpoints
             pcs.ToDictionary(pc => pc.Id, pc => BuildAudio(pc.Id, state, outputsByPc)),
             await LightEndpoints.BuildSnapshotsAsync(db, state, ct),
             state.Music,
+            await SceneEndpoints.ListAsync(db, ct),
             time.GetUtcNow());
 
         return Results.Ok(snapshot);
