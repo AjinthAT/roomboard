@@ -42,7 +42,6 @@ export function AudioCard({ onUnauthorized }: { onUnauthorized: () => void }) {
       </header>
 
       <OutputPicker
-        pcId={pcId}
         activeOutputId={activeOutputId}
         usable={usable}
         onPick={(outputId) => run(() => setAudioOutput(pcId, outputId))}
@@ -65,7 +64,6 @@ function OutputPicker({
   usable,
   onPick,
 }: {
-  pcId: string;
   activeOutputId: string | null;
   usable: boolean;
   onPick: (outputId: string) => void;

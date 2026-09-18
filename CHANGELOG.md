@@ -27,6 +27,14 @@ Le projet ne suit pas SemVer : il suit ses jalons.
   un curseur qui ne suit pas le doigt est inutilisable.
 
 ### Corrigé
+- **La détection de changement d'état audio ne fonctionnait pas.** L'opérateur `==`
+  d'un record compare ses membres avec le comparateur par défaut, donc
+  `IReadOnlyList<T>` par *référence* ; comme chaque lecture construit une nouvelle
+  liste, le test était toujours faux. L'agent publiait donc toutes les 2 s au lieu de
+  publier au changement plus un filet à 10 s. Comparaison explicite des deux côtés,
+  et le Core ne rediffuse plus un état identique.
+- Clé étrangère manquante sur `audio_outputs.pc_device_id`, pourtant décrite comme
+  telle dans `04-domaine.md`.
 - Le binder de configuration .NET ajoute aux collections au lieu de les remplacer :
   deux sorties par défaut plus deux venant de l'environnement en auraient produit
   quatre. Le repli est passé dans le seeder.

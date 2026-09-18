@@ -157,7 +157,7 @@ public sealed class AgentWorker(
         var current = audio.Read();
         var stale = DateTimeOffset.UtcNow - _lastAudioPush >= AudioHeartbeat;
 
-        if (!stale && current == _lastAudio)
+        if (!stale && !HasChanged(_lastAudio, current))
         {
             return;
         }
@@ -165,6 +165,28 @@ public sealed class AgentWorker(
         await connection.InvokeAsync(AgentProtocol.ToCore.PushAudioState, current, ct);
         _lastAudio = current;
         _lastAudioPush = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Compare deux états audio par leur contenu.
+    /// </summary>
+    /// <remarks>
+    /// L'opérateur <c>==</c> d'un record compare ses membres avec le comparateur par
+    /// défaut, donc <see cref="IReadOnlyList{T}"/> par <em>référence</em>. Comme chaque
+    /// lecture construit une nouvelle liste, <c>current == _lastAudio</c> était toujours
+    /// faux et l'état partait toutes les 2 s au lieu de partir au changement.
+    /// </remarks>
+    private static bool HasChanged(AgentAudioState? previous, AgentAudioState current)
+    {
+        if (previous is null)
+        {
+            return true;
+        }
+
+        return previous.ActiveWindowsDeviceId != current.ActiveWindowsDeviceId
+            || previous.Volume != current.Volume
+            || previous.Muted != current.Muted
+            || !previous.Outputs.SequenceEqual(current.Outputs);
     }
 
     /// <summary>

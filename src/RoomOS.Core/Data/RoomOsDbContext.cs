@@ -47,6 +47,11 @@ public sealed class RoomOsDbContext(DbContextOptions<RoomOsDbContext> options) :
             output.Property(o => o.MatchHint).HasColumnName("match_hint").IsRequired();
             output.Property(o => o.FriendlyName).HasColumnName("friendly_name").IsRequired();
             output.Property(o => o.SortOrder).HasColumnName("sort_order");
+
+            output.HasOne<Device>()
+                .WithMany()
+                .HasForeignKey(o => o.PcDeviceId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
