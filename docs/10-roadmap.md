@@ -150,13 +150,39 @@ téléphone. À trancher avant M5, voir `09-integrations.md`.
 > qui rapporte un échec systématique finit par ne plus être lue. Les scènes seront
 > alignées sur le matériel réellement présent au moment de M5.
 
-- [ ] Achat coordinateur + ampoules Zigbee, appairage dans Z2M
-- [ ] Mosquitto + Z2M dans le compose
-- [ ] Souscription MQTT, on/off/luminosité/couleur
-- [ ] Carte Lights dans l'UI
+- [ ] Achat coordinateur + ampoule Zigbee, appairage dans Z2M — **en attente de livraison**
+- [x] Mosquitto + Z2M dans le compose
+- [x] Souscription MQTT, on/off/luminosité/couleur
+- [x] Carte Lights dans l'UI
 
 **DoD** : les lampes répondent en moins d'une seconde et l'état reste juste
 même si elles sont pilotées par leur interrupteur physique.
+
+Vérifié le 2026-09-18 **contre un Zigbee2MQTT simulé**, en publiant à la main les
+messages qu'il émettrait :
+- Disponibilité `online` puis `offline` : `reachable` suit, et l'état connu est
+  conservé — une lampe coupée au mur n'est pas une lampe éteinte.
+- État reçu `{"state":"ON","brightness":153,"color":{"x":0.5687,"y":0.3813}}` →
+  RoomOS affiche allumée, **60 %**, **#FF6711**.
+- Commandes émises sur `zigbee2mqtt/desk_light/set` : `{"state":"OFF"}`,
+  `{"state":"ON","brightness":76}` pour 30 %, `{"color":{"hex":"#FF0000"}}`.
+  Conformes aux charges utiles de `09-integrations.md`.
+- Validation : couleur malformée et luminosité hors bornes refusées en 400, lampe
+  inconnue en 404, absence de jeton en 401.
+
+**Ce que la simulation ne prouve pas** : le délai de réponse sous la seconde, la
+portée radio, et le comportement réel de l'ampoule. Tout cela demande le matériel.
+
+### Décisions prises pendant M4
+- **Mosquitto n'est publié que sur `127.0.0.1`.** Le Core l'atteint depuis le réseau
+  hôte, Zigbee2MQTT par le réseau interne Docker, et rien depuis le LAN.
+- **Zigbee2MQTT est derrière un profil compose** : sans coordinateur joignable il
+  redémarre en boucle. `docker compose --profile zigbee up -d` une fois branché.
+- **Conversion des unités faite explicitement.** La luminosité vaut 0–254 côté Zigbee
+  et 0–100 côté RoomOS ; et Z2M accepte une couleur en hexadécimal mais la renvoie en
+  coordonnées CIE xy. Sans conversion retour, la couleur affichée serait fausse dès
+  qu'une lampe est pilotée hors de RoomOS. Couvert par des tests unitaires : c'est du
+  calcul pur, et une erreur y serait silencieuse.
 
 ## M5 — Scènes
 - [ ] Moteur de scènes + exécuteurs

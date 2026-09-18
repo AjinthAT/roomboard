@@ -3,6 +3,7 @@ import { UnauthorizedError, getState } from './api/client';
 import { connectRoomHub } from './api/hub';
 import { clearToken, readToken } from './api/token';
 import { AudioCard } from './components/AudioCard';
+import { LightsCard } from './components/LightsCard';
 import { MusicCard } from './components/MusicCard';
 import { PcCard } from './components/PcCard';
 import { TokenGate } from './components/TokenGate';
@@ -104,6 +105,7 @@ export function App() {
         <PcCard onUnauthorized={forgetToken} />
         <MusicCard onUnauthorized={forgetToken} />
         <AudioCard onUnauthorized={forgetToken} />
+        <LightsCard onUnauthorized={forgetToken} />
       </div>
     </main>
   );

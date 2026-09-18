@@ -1,5 +1,8 @@
 import { useSyncExternalStore } from 'react';
-import type { AudioSnapshot, MusicState, PcSnapshot, StateSnapshot, Telemetry } from '../api/types';
+import type {
+  AudioSnapshot, LightSnapshot, LightStateChanged, MusicState, PcSnapshot,
+  StateSnapshot, Telemetry,
+} from '../api/types';
 import { MusicLink } from '../api/types';
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'offline';
@@ -8,6 +11,7 @@ export type RoomState = {
   roomName: string;
   pc: PcSnapshot | null;
   audio: AudioSnapshot | null;
+  lights: LightSnapshot[];
   music: MusicState;
   connection: ConnectionStatus;
 };
@@ -20,8 +24,11 @@ const NO_MUSIC: MusicState = {
   },
 };
 
+const NO_LIGHTS: LightSnapshot[] = [];
+
 const EMPTY: RoomState = {
-  roomName: '', pc: null, audio: null, music: NO_MUSIC, connection: 'connecting',
+  roomName: '', pc: null, audio: null, lights: NO_LIGHTS,
+  music: NO_MUSIC, connection: 'connecting',
 };
 
 /**
@@ -71,8 +78,24 @@ class RoomStore {
       roomName: snapshot.room.name,
       pc,
       audio: pc ? (snapshot.audio[pc.id] ?? null) : null,
+      lights: snapshot.lights,
       music: snapshot.music,
     });
+  }
+
+  setLight(id: string, patch: Omit<LightStateChanged, 'id'>): void {
+    const index = this.state.lights.findIndex((l) => l.id === id);
+
+    if (index === -1) {
+      return;
+    }
+
+    // Nouveau tableau, mais objets inchangés hors de l'indice touché : les lignes
+    // des autres lampes ne re-rendent pas.
+    const lights = [...this.state.lights];
+    lights[index] = { ...lights[index], ...patch };
+
+    this.set({ lights });
   }
 
   setMusic(music: MusicState): void {

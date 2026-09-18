@@ -62,8 +62,48 @@ public static class DatabaseSeeder
         }
 
         await SeedAudioOutputsAsync(db, options, ct);
+        await SeedLightsAsync(db, options, ct);
 
         await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// Crée les lampes déclarées en configuration. Aucune par défaut : tant qu'aucune
+    /// ampoule n'est appairée, il n'y a rien à afficher, et une lampe fantôme serait
+    /// pire qu'une carte vide.
+    /// </summary>
+    private static async Task SeedLightsAsync(
+        RoomOsDbContext db, RoomOsOptions options, CancellationToken ct)
+    {
+        foreach (var configured in options.Lights)
+        {
+            if (string.IsNullOrWhiteSpace(configured.Id))
+            {
+                continue;
+            }
+
+            var config = JsonSerializer.Serialize(new LightConfig(
+                configured.Z2mFriendlyName, configured.SupportsColor, configured.SupportsBrightness));
+
+            var existing = await db.Devices.FirstOrDefaultAsync(d => d.Id == configured.Id, ct);
+
+            if (existing is null)
+            {
+                db.Devices.Add(new Device
+                {
+                    Id = configured.Id,
+                    RoomId = RoomId,
+                    Kind = DeviceKind.Light,
+                    Name = configured.Name,
+                    ConfigJson = config,
+                });
+            }
+            else
+            {
+                existing.Name = configured.Name;
+                existing.ConfigJson = config;
+            }
+        }
     }
 
     /// <summary>

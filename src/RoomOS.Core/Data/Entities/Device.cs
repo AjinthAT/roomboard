@@ -22,6 +22,15 @@ public sealed class Device
     public Room? Room { get; set; }
 }
 
+/// <summary>Contenu de <see cref="Device.ConfigJson"/> quand le type est <c>Light</c>.</summary>
+/// <remarks>
+/// <c>Z2mFriendlyName</c> peut désigner une ampoule ou un <em>groupe</em> Zigbee2MQTT :
+/// les deux acceptent les mêmes commandes, ce qui permet de piloter plusieurs ampoules
+/// comme une seule lumière sans toucher au modèle de données.
+/// </remarks>
+public sealed record LightConfig(
+    string Z2mFriendlyName, bool SupportsColor, bool SupportsBrightness);
+
 /// <summary>Contenu de <see cref="Device.ConfigJson"/> quand le type est <c>Pc</c>.</summary>
 /// <remarks>
 /// Pas de jeton ici : l'agent s'authentifie avec <c>ROOMOS__AgentToken</c>, une

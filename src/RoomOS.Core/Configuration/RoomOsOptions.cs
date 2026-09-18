@@ -30,6 +30,36 @@ public sealed class RoomOsOptions
     public List<AudioOutputOptions> AudioOutputs { get; set; } = [];
 
     public SpotifyOptions Spotify { get; set; } = new();
+
+    public MqttOptions Mqtt { get; set; } = new();
+
+    /// <summary>
+    /// Lampes déclarées. Vide par défaut, pour la même raison que les sorties audio :
+    /// le binder de configuration ajoute aux collections au lieu de les remplacer.
+    /// </summary>
+    public List<LightOptions> Lights { get; set; } = [];
+}
+
+public sealed class MqttOptions
+{
+    /// <summary>
+    /// Le Core tourne en réseau hôte pour le Wake-on-LAN, il ne résout donc pas les
+    /// noms de services Docker : Mosquitto se joint par la boucle locale.
+    /// </summary>
+    public string Host { get; set; } = "127.0.0.1";
+
+    public int Port { get; set; } = 1883;
+
+    public string BaseTopic { get; set; } = "zigbee2mqtt";
+}
+
+public sealed class LightOptions
+{
+    public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Z2mFriendlyName { get; set; } = string.Empty;
+    public bool SupportsColor { get; set; } = true;
+    public bool SupportsBrightness { get; set; } = true;
 }
 
 public sealed class SpotifyOptions

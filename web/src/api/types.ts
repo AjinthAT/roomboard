@@ -54,10 +54,23 @@ export type MusicState = {
   nowPlaying: NowPlaying;
 };
 
+export type LightSnapshot = {
+  id: string;
+  name: string;
+  on: boolean;
+  brightness: number | null;
+  colorHex: string | null;
+  /** Faux quand Zigbee2MQTT signale la lampe injoignable, coupée au mur par exemple. */
+  reachable: boolean;
+  supportsColor: boolean;
+  supportsBrightness: boolean;
+};
+
 export type StateSnapshot = {
   room: { id: string; name: string };
   pcs: PcSnapshot[];
   audio: Record<string, AudioSnapshot>;
+  lights: LightSnapshot[];
   music: MusicState;
   serverTime: string;
 };
@@ -71,6 +84,14 @@ export type PcStateChanged = {
 export type TelemetryUpdated = {
   id: string;
   telemetry: Telemetry;
+};
+
+export type LightStateChanged = {
+  id: string;
+  on: boolean;
+  brightness: number | null;
+  colorHex: string | null;
+  reachable: boolean;
 };
 
 export type NowPlayingChanged = {

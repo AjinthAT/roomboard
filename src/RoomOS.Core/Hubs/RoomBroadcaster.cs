@@ -30,6 +30,7 @@ public sealed class RoomBroadcaster(
         state.TelemetryUpdated += OnTelemetryUpdated;
         state.AudioStateChanged += OnAudioStateChanged;
         state.NowPlayingChanged += OnNowPlayingChanged;
+        state.LightStateChanged += OnLightStateChanged;
         return Task.CompletedTask;
     }
 
@@ -39,6 +40,7 @@ public sealed class RoomBroadcaster(
         state.TelemetryUpdated -= OnTelemetryUpdated;
         state.AudioStateChanged -= OnAudioStateChanged;
         state.NowPlayingChanged -= OnNowPlayingChanged;
+        state.LightStateChanged -= OnLightStateChanged;
         return Task.CompletedTask;
     }
 
@@ -51,6 +53,9 @@ public sealed class RoomBroadcaster(
 
     private void OnNowPlayingChanged(NowPlayingChanged payload) =>
         Send(RoomProtocol.NowPlayingChanged, payload);
+
+    private void OnLightStateChanged(LightStateChanged payload) =>
+        Send(RoomProtocol.LightStateChanged, payload);
 
     private void OnTelemetryUpdated(TelemetryUpdated payload)
     {
