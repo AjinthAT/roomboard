@@ -40,10 +40,13 @@
 
 | Nom | Valeur | Note |
 |---|---|---|
-| `CORE_HOST` | **`192.168.1.30`** | Confirmé : VM `vm-102`, interface `ens18`. Réservation DHCP à poser. |
+| `CORE_HOST` | **`192.168.1.30`** | VM `vm-102`, `ens18`, **IP statique** dans `/etc/network/interfaces`. Rien à réserver côté DHCP. |
 | `CORE_PORT` | `8080` | HTTP |
 | `PC_MAC` | **`C8:7F:54:68:BB:40`** | Carte Intel Ethernet. Ni le Bluetooth, ni les TAP-Windows d'OpenVPN. |
 | `PC_IP` | **`192.168.1.150`** | IP statique, confirmée |
+
+> Les deux adresses sont statiques, configurées sur les machines elles-mêmes. Aucune
+> dépendance au bail DHCP de la box, donc rien qui puisse bouger après une coupure.
 | `BROADCAST` | `192.168.1.255` | Cible du paquet magique |
 
 > Le Core tourne sur la machine où l'on développe : **dev et prod sont la même VM**.
