@@ -35,7 +35,15 @@ public sealed class SpotifyAuthService(
     /// se termine en quelques secondes, et un redémarrage du Core au milieu se résout
     /// en relançant l'autorisation.
     /// </summary>
-    private readonly ConcurrentDictionary<string, string> _pendingVerifiers = new();
+    private readonly ConcurrentDictionary<string, (string Verifier, DateTimeOffset CreatedAt)>
+        _pendingVerifiers = new();
+
+    /// <summary>
+    /// Durée de vie d'un vérificateur en attente. Une autorisation abandonnée — onglet
+    /// fermé avant de valider — laisserait sinon une entrée à vie, et la route
+    /// d'autorisation n'est pas authentifiée.
+    /// </summary>
+    private static readonly TimeSpan VerifierLifetime = TimeSpan.FromMinutes(10);
 
     private readonly SpotifyOptions _spotify = options.Value.Spotify;
 
@@ -46,7 +54,8 @@ public sealed class SpotifyAuthService(
         var verifier = RandomUrlSafe(64);
         var state = RandomUrlSafe(16);
 
-        _pendingVerifiers[state] = verifier;
+        PurgeExpiredVerifiers();
+        _pendingVerifiers[state] = (verifier, time.GetUtcNow());
 
         var query = new Dictionary<string, string?>
         {
@@ -65,11 +74,19 @@ public sealed class SpotifyAuthService(
     public async Task<bool> ExchangeCodeAsync(
         string code, string state, RoomOsDbContext db, CancellationToken ct)
     {
-        if (!_pendingVerifiers.TryRemove(state, out var verifier))
+        if (!_pendingVerifiers.TryRemove(state, out var pending))
         {
-            logger.LogWarning("Callback Spotify avec un state inconnu.");
+            logger.LogWarning("Callback Spotify avec un state inconnu ou expiré.");
             return false;
         }
+
+        if (time.GetUtcNow() - pending.CreatedAt > VerifierLifetime)
+        {
+            logger.LogWarning("Callback Spotify arrivé après expiration du vérificateur.");
+            return false;
+        }
+
+        var verifier = pending.Verifier;
 
         var response = await PostTokenAsync(new Dictionary<string, string>
         {
@@ -178,6 +195,19 @@ public sealed class SpotifyAuthService(
         }
 
         return await response.Content.ReadFromJsonAsync<TokenResponse>(ct);
+    }
+
+    private void PurgeExpiredVerifiers()
+    {
+        var deadline = time.GetUtcNow() - VerifierLifetime;
+
+        foreach (var (key, pending) in _pendingVerifiers)
+        {
+            if (pending.CreatedAt < deadline)
+            {
+                _pendingVerifiers.TryRemove(key, out _);
+            }
+        }
     }
 
     private static string RandomUrlSafe(int bytes) =>

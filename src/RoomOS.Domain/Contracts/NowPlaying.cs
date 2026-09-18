@@ -33,6 +33,14 @@ public enum MusicLinkState
     NoActiveDevice,
 
     Ready,
+
+    /// <summary>
+    /// Spotify refuse l'accès : jeton révoqué, ou compte absent de la liste
+    /// d'utilisateurs autorisés de l'application. Ce dernier cas est le piège le plus
+    /// fréquent du mode développement (docs/09-integrations.md), et il est
+    /// indiscernable d'une absence d'appareil si on ne le distingue pas.
+    /// </summary>
+    Denied,
 }
 
 public sealed record MusicState(MusicLinkState Link, NowPlaying NowPlaying);

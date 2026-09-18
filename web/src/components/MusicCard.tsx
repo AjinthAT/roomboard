@@ -32,9 +32,14 @@ export function MusicCard({ onUnauthorized }: { onUnauthorized: () => void }) {
         {link === MusicLink.NoActiveDevice && (
           <span className="text-sm text-neutral-500">Aucun appareil actif</span>
         )}
+        {link === MusicLink.Denied && (
+          <span className="text-sm text-amber-400">Accès refusé</span>
+        )}
       </header>
 
-      {link === MusicLink.NotLinked ? <NotLinked /> : <Track />}
+      {link === MusicLink.NotLinked ? <NotLinked />
+        : link === MusicLink.Denied ? <Denied />
+        : <Track />}
 
       <div className="flex gap-3">
         <Control label="Précédent" glyph="◀◀" disabled={!live || !title} onClick={() => run('previous')} />
@@ -62,6 +67,20 @@ function NotLinked() {
     <p className="text-sm text-neutral-500">
       Spotify n'est pas encore autorisé. L'autorisation se fait une fois depuis un
       ordinateur, pas depuis cet écran.
+    </p>
+  );
+}
+
+/**
+ * Spotify refuse l'accès. La cause la plus fréquente n'est pas une panne mais une
+ * configuration : le compte doit figurer dans la liste d'utilisateurs autorisés de
+ * l'application, faute de quoi l'API renvoie 403 sur tout (docs/09-integrations.md).
+ */
+function Denied() {
+  return (
+    <p className="text-sm text-neutral-500">
+      Spotify refuse l'accès. Vérifie que ton compte figure bien dans la liste
+      d'utilisateurs autorisés de l'application, ou relance l'autorisation.
     </p>
   );
 }

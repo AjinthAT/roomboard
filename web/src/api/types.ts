@@ -46,8 +46,8 @@ export type NowPlaying = {
   deviceName: string | null;
 };
 
-/** Sérialisé en nombre par System.Text.Json : 0 NotLinked, 1 NoActiveDevice, 2 Ready. */
-export const MusicLink = { NotLinked: 0, NoActiveDevice: 1, Ready: 2 } as const;
+/** Sérialisé en nombre par System.Text.Json, dans l'ordre de déclaration de l'enum C#. */
+export const MusicLink = { NotLinked: 0, NoActiveDevice: 1, Ready: 2, Denied: 3 } as const;
 
 export type MusicState = {
   link: number;
