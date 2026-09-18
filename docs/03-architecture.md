@@ -43,6 +43,21 @@ qui existe, plus fiable qu'un ping.
 
 Exception : le Wake-on-LAN est émis par le Core (le PC est éteint, il n'y a pas d'agent).
 
+### 1 bis. Le Core tourne sur le réseau de l'hôte
+
+`network_mode: host` dans `deploy/docker-compose.yml`, et ce n'est pas un détail
+d'exploitation : c'est une conséquence directe du Wake-on-LAN.
+
+Le paquet magique est un broadcast UDP dirigé vers `192.168.1.255`. Depuis un bridge
+Docker, le conteneur est en `172.x` : cette adresse n'est pas sur son lien local, le
+paquet part vers la passerelle, et Linux ne relaie pas les broadcasts dirigés. Il
+n'atteint jamais le LAN — vérifié à la capture, zéro paquet sur `ens18` en mode
+bridge, contre 102 octets aux ports 9 et 7 en mode hôte.
+
+**Conséquence pour M4** : Mosquitto et Zigbee2MQTT devront soit être eux aussi en
+réseau hôte, soit être joints par `127.0.0.1` et non par leur nom de service Docker.
+Un conteneur en réseau hôte ne résout pas les noms du réseau bridge.
+
 ### 2. L'état vit en mémoire, la configuration vit en base
 - **En base (SQLite)** : pièces, appareils, sorties audio, scènes, jetons d'intégration.
   Ce qui change rarement et doit survivre à un redémarrage.

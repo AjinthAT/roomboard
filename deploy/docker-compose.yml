@@ -1,4 +1,4 @@
-# RoomOS — M0 : le Core seul.
+# RoomOS — M0/M1 : le Core seul.
 # Mosquitto et Zigbee2MQTT arrivent en M4, Prometheus et Grafana en M6.
 services:
   core:
@@ -8,8 +8,16 @@ services:
     image: roomos-core:latest
     container_name: roomos-core
     restart: unless-stopped
-    ports:
-      - "${CORE_PORT:-8080}:8080"
+
+    # Réseau de l'hôte, et non bridge : le Wake-on-LAN est un broadcast UDP dirigé
+    # vers 192.168.1.255. Depuis un bridge Docker (172.x), ce broadcast n'est pas
+    # sur le lien local du conteneur et Linux ne relaie pas les broadcasts dirigés :
+    # le paquet magique n'atteint jamais le LAN. Vérifié à la capture : zéro paquet
+    # sur ens18 en mode bridge. Voir docs/03-architecture.md.
+    network_mode: host
+
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:${CORE_PORT:-8080}
     env_file:
       - .env
     volumes:

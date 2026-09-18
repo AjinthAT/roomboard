@@ -53,6 +53,11 @@ Le projet ne suit pas SemVer : il suit ses jalons.
   la 0.9.5 : sans PawnIO, toute lecture MSR renvoie `null` alors qu'`Open()` réussit
   et que les capteurs GPU continuent de fonctionner. `--sensors` affiche désormais
   son état.
+- **Wake-on-LAN inopérant en conteneur.** Le paquet magique est un broadcast dirigé ;
+  depuis un bridge Docker il n'atteint jamais le LAN, et l'émission réussit pourtant
+  sans erreur. Capture à l'appui : zéro paquet sur `ens18` en bridge, 102 octets aux
+  ports 9 et 7 en `network_mode: host`. Le Core tourne désormais sur le réseau de
+  l'hôte.
 - **Télémétrie fantôme sur un PC hors ligne.** Une mesure en vol traitée après la
   déconnexion réinjectait des valeurs dans l'état d'un PC déclaré éteint ; le
   snapshot suivant les affichait comme vivantes.
