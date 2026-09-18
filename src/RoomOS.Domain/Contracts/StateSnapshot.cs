@@ -12,6 +12,7 @@ public sealed record StateSnapshot(
     RoomInfo Room,
     IReadOnlyList<PcSnapshot> Pcs,
     IReadOnlyDictionary<string, AudioSnapshot> Audio,
+    MusicState Music,
     DateTimeOffset ServerTime);
 
 /// <summary>État audio d'un PC, indexé par son identifiant dans le snapshot.</summary>

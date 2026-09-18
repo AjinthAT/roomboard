@@ -36,6 +36,8 @@ L'agent utilise un token distinct (`ROOMOS__AgentToken`).
 | POST | `/api/music/next` | |
 | POST | `/api/music/previous` | |
 | PUT | `/api/music/volume` | `{ "level": 60 }` |
+| GET | `/api/music/authorize` | 302 vers Spotify. **Non authentifiée** : parcourue par un navigateur sans jeton. |
+| GET | `/api/music/callback` | Retour du flux PKCE. **Non authentifiée**, protégée par le couple `state` / `code_verifier`. |
 | GET | `/api/scenes` | Liste |
 | POST | `/api/scenes/{id}/run` | 202 + `runId` |
 | GET | `/api/scenes/runs/{runId}` | État d'exécution + log des étapes |

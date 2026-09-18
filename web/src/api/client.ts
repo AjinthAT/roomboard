@@ -65,3 +65,9 @@ export const setAudioVolume = (pcId: string, level: number) =>
 
 export const setAudioMute = (pcId: string, muted: boolean) =>
   putAudio(pcId, 'mute', { muted });
+
+export type MusicAction = 'play' | 'pause' | 'next' | 'previous';
+
+export function runMusicAction(action: MusicAction): Promise<unknown> {
+  return request(`/api/music/${action}`, { method: 'POST' });
+}

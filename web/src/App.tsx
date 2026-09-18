@@ -3,6 +3,7 @@ import { UnauthorizedError, getState } from './api/client';
 import { connectRoomHub } from './api/hub';
 import { clearToken, readToken } from './api/token';
 import { AudioCard } from './components/AudioCard';
+import { MusicCard } from './components/MusicCard';
 import { PcCard } from './components/PcCard';
 import { TokenGate } from './components/TokenGate';
 import { roomStore, useRoom } from './store/roomStore';
@@ -101,6 +102,7 @@ export function App() {
       <ConnectionBanner />
       <div className="grid gap-6 md:grid-cols-2">
         <PcCard onUnauthorized={forgetToken} />
+        <MusicCard onUnauthorized={forgetToken} />
         <AudioCard onUnauthorized={forgetToken} />
       </div>
     </main>

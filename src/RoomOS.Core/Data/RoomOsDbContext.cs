@@ -8,6 +8,7 @@ public sealed class RoomOsDbContext(DbContextOptions<RoomOsDbContext> options) :
     public DbSet<Room> Rooms => Set<Room>();
     public DbSet<Device> Devices => Set<Device>();
     public DbSet<AudioOutput> AudioOutputs => Set<AudioOutput>();
+    public DbSet<IntegrationToken> IntegrationTokens => Set<IntegrationToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -52,6 +53,16 @@ public sealed class RoomOsDbContext(DbContextOptions<RoomOsDbContext> options) :
                 .WithMany()
                 .HasForeignKey(o => o.PcDeviceId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<IntegrationToken>(token =>
+        {
+            token.ToTable("integration_tokens");
+            token.HasKey(t => t.Provider);
+            token.Property(t => t.Provider).HasColumnName("provider");
+            token.Property(t => t.AccessToken).HasColumnName("access_token").IsRequired();
+            token.Property(t => t.RefreshToken).HasColumnName("refresh_token").IsRequired();
+            token.Property(t => t.ExpiresAt).HasColumnName("expires_at");
         });
     }
 }

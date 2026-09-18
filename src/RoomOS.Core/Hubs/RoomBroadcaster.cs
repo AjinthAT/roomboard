@@ -29,6 +29,7 @@ public sealed class RoomBroadcaster(
         state.PcStateChanged += OnPcStateChanged;
         state.TelemetryUpdated += OnTelemetryUpdated;
         state.AudioStateChanged += OnAudioStateChanged;
+        state.NowPlayingChanged += OnNowPlayingChanged;
         return Task.CompletedTask;
     }
 
@@ -37,6 +38,7 @@ public sealed class RoomBroadcaster(
         state.PcStateChanged -= OnPcStateChanged;
         state.TelemetryUpdated -= OnTelemetryUpdated;
         state.AudioStateChanged -= OnAudioStateChanged;
+        state.NowPlayingChanged -= OnNowPlayingChanged;
         return Task.CompletedTask;
     }
 
@@ -46,6 +48,9 @@ public sealed class RoomBroadcaster(
     // L'état audio change rarement : pas de limitation de débit ici.
     private void OnAudioStateChanged(AudioStateChanged payload) =>
         Send(RoomProtocol.AudioStateChanged, payload);
+
+    private void OnNowPlayingChanged(NowPlayingChanged payload) =>
+        Send(RoomProtocol.NowPlayingChanged, payload);
 
     private void OnTelemetryUpdated(TelemetryUpdated payload)
     {

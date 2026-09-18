@@ -9,6 +9,7 @@ using RoomOS.Core.Auth;
 using RoomOS.Core.Configuration;
 using RoomOS.Core.Data;
 using RoomOS.Core.Hubs;
+using RoomOS.Core.Integrations.Spotify;
 using RoomOS.Core.Integrations.Wol;
 using RoomOS.Core.State;
 using RoomOS.Domain.Contracts;
@@ -33,6 +34,11 @@ builder.Services.AddSingleton<StateStore>();
 builder.Services.AddSingleton<AgentRegistry>();
 builder.Services.AddSingleton<WakeOnLanSender>();
 builder.Services.AddScoped<AudioOutputResolver>();
+
+builder.Services.AddHttpClient(SpotifyMusicProvider.HttpClientName);
+builder.Services.AddSingleton<SpotifyAuthService>();
+builder.Services.AddScoped<IMusicProvider, SpotifyMusicProvider>();
+builder.Services.AddHostedService<MusicPoller>();
 builder.Services.AddHostedService<RoomBroadcaster>();
 
 builder.Services.AddSignalR();
@@ -76,6 +82,7 @@ app.MapGet("/healthz", () => new HealthResponse("ok", version, DateTimeOffset.Ut
 app.MapStateEndpoints();
 app.MapPcEndpoints();
 app.MapAudioEndpoints();
+app.MapMusicEndpoints();
 
 app.MapHub<RoomHub>("/hub/room");
 app.MapHub<AgentHub>("/hub/agent");

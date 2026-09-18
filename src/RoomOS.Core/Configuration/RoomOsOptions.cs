@@ -28,6 +28,22 @@ public sealed class RoomOsOptions
     /// se cumuleraient avec celles de l'environnement. Le repli est dans le seeder.
     /// </remarks>
     public List<AudioOutputOptions> AudioOutputs { get; set; } = [];
+
+    public SpotifyOptions Spotify { get; set; } = new();
+}
+
+public sealed class SpotifyOptions
+{
+    /// <summary>Public par nature : le flux PKCE n'utilise pas de secret client.</summary>
+    public string ClientId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Spotify impose HTTPS hors adresses de bouclage littérales. Ni une adresse LAN,
+    /// ni « localhost » ne sont acceptés (docs/09-integrations.md).
+    /// </summary>
+    public string RedirectUri { get; set; } = "http://127.0.0.1:8080/api/music/callback";
+
+    public bool IsConfigured => !string.IsNullOrWhiteSpace(ClientId);
 }
 
 public sealed class AudioOutputOptions

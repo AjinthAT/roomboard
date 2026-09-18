@@ -114,12 +114,27 @@ Reste à éprouver :
   celui-ci le rejoint.
 
 ## M3 — Spotify
-- [ ] OAuth PKCE, stockage du refresh token
-- [ ] `IMusicProvider` + `SpotifyMusicProvider`
-- [ ] Polling adaptatif, `NowPlayingChanged`
-- [ ] Carte Music dans l'UI, gestion du cas « aucun appareil actif »
+- [x] OAuth PKCE, stockage du refresh token
+- [x] `IMusicProvider` + `SpotifyMusicProvider`
+- [x] Polling adaptatif, `NowPlayingChanged`
+- [x] Carte Music dans l'UI, gestion du cas « aucun appareil actif »
 
 **DoD** : pochette et contrôles fonctionnels, pas de plantage quand Spotify est fermé.
+
+Vérifié le 2026-09-18 :
+- Autorisation PKCE menée de bout en bout par tunnel SSH, jetons en base.
+- `link = 2`, titre, artiste, pochette et appareil remontés.
+- Sondage mesuré à **3,1 s** en lecture, conforme aux 3 s attendues.
+
+Reste à éprouver :
+- [ ] Contrôles précédent / lecture / suivant depuis l'iPad
+- [ ] Comportement Spotify fermé (doit afficher « aucun appareil actif », pas planter)
+- [ ] Renouvellement du jeton après une heure
+
+### Problème ouvert reporté à M5
+L'appareil actif était un téléphone, pas le PC. Les endpoints Player s'appliquent à
+l'appareil actif du compte : la scène **Gaming** lancerait donc la musique sur le
+téléphone. À trancher avant M5, voir `09-integrations.md`.
 
 ## M4 — Lumières
 - [ ] Achat coordinateur + ampoules Zigbee, appairage dans Z2M

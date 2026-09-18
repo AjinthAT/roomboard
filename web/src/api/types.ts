@@ -36,10 +36,29 @@ export type AudioSnapshot = {
   outputs: AudioOutputInfo[];
 };
 
+export type NowPlaying = {
+  title: string | null;
+  artist: string | null;
+  albumArtUrl: string | null;
+  isPlaying: boolean;
+  progressMs: number | null;
+  durationMs: number | null;
+  deviceName: string | null;
+};
+
+/** Sérialisé en nombre par System.Text.Json : 0 NotLinked, 1 NoActiveDevice, 2 Ready. */
+export const MusicLink = { NotLinked: 0, NoActiveDevice: 1, Ready: 2 } as const;
+
+export type MusicState = {
+  link: number;
+  nowPlaying: NowPlaying;
+};
+
 export type StateSnapshot = {
   room: { id: string; name: string };
   pcs: PcSnapshot[];
   audio: Record<string, AudioSnapshot>;
+  music: MusicState;
   serverTime: string;
 };
 
@@ -52,6 +71,11 @@ export type PcStateChanged = {
 export type TelemetryUpdated = {
   id: string;
   telemetry: Telemetry;
+};
+
+export type NowPlayingChanged = {
+  link: number;
+  nowPlaying: NowPlaying;
 };
 
 export type AudioStateChanged = {
