@@ -42,12 +42,15 @@
 |---|---|---|
 | `CORE_HOST` | **`192.168.1.30`** | Confirmé : VM `vm-102`, interface `ens18`. Réservation DHCP à poser. |
 | `CORE_PORT` | `8080` | HTTP |
-| `PC_MAC` | **à relever** | Pour le WoL. `getmac /v` sur le PC, carte Ethernet uniquement. |
-| `PC_IP` | **à relever** | Réservation DHCP obligatoire |
+| `PC_MAC` | **`C8:7F:54:68:BB:40`** | Carte Intel Ethernet. Ni le Bluetooth, ni les TAP-Windows d'OpenVPN. |
+| `PC_IP` | **`192.168.1.150`** | IP statique, confirmée |
 | `BROADCAST` | `192.168.1.255` | Cible du paquet magique |
 
 > Le Core tourne sur la machine où l'on développe : **dev et prod sont la même VM**.
 > L'iPad peut donc charger `http://192.168.1.30:8080` dès M0, sans étape de déploiement.
 >
-> `PC_MAC` et `PC_IP` sont les deux seules valeurs manquantes. Elles bloquent M1
-> (Wake-on-LAN), pas M0.
+> **Le plan d'adressage est complet.** Plus rien ne bloque M1.
+>
+> Le PC expose aussi deux adaptateurs virtuels TAP-Windows (OpenVPN) et une interface
+> Bluetooth. Le paquet magique doit viser la carte **Intel Ethernet** : le WoL par
+> Wi-Fi ou par interface virtuelle ne fonctionne pas.
