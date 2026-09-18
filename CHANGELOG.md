@@ -5,6 +5,28 @@ Toutes les évolutions notables de RoomOS. Une entrée par jalon de `docs/10-roa
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Le projet ne suit pas SemVer : il suit ses jalons.
 
+## M4 — Lumières — 2026-09-18
+
+Codé et vérifié contre un Zigbee2MQTT simulé, en attendant le matériel.
+
+### Ajouté
+- Mosquitto dans le `docker compose`, publié sur la boucle locale uniquement.
+- Zigbee2MQTT préconfiguré, derrière un profil compose tant qu'aucun coordinateur
+  n'est branché.
+- Pont MQTT : abonnement à `zigbee2mqtt/+` et `zigbee2mqtt/+/availability`, commandes
+  publiées sur `zigbee2mqtt/<nom>/set`, reconnexion automatique à Mosquitto.
+- `GET /api/lights` et `PUT /api/lights/{id}`, avec validation de la couleur et de la
+  luminosité — Zigbee2MQTT ignore silencieusement une charge utile malformée.
+- Conversions d'unités entre Zigbee et RoomOS, couvertes par des tests : luminosité
+  0–254 contre 0–100, et couleur CIE xy vers hexadécimal.
+- Carte Lumières : bascule, luminosité, pastille de couleur, état injoignable.
+
+### Décidé
+- `Z2mFriendlyName` peut désigner une ampoule **ou un groupe** Zigbee2MQTT : plusieurs
+  ampoules peuvent former une seule lumière sans toucher au modèle de données.
+- Une lampe injoignable conserve son dernier état connu plutôt que d'être affichée
+  éteinte : coupée au mur n'est pas éteinte.
+
 ## M3 — Spotify — 2026-09-18
 
 ### Ajouté

@@ -12,6 +12,7 @@ public sealed record StateSnapshot(
     RoomInfo Room,
     IReadOnlyList<PcSnapshot> Pcs,
     IReadOnlyDictionary<string, AudioSnapshot> Audio,
+    IReadOnlyList<LightSnapshot> Lights,
     MusicState Music,
     DateTimeOffset ServerTime);
 

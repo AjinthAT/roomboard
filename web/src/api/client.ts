@@ -66,6 +66,20 @@ export const setAudioVolume = (pcId: string, level: number) =>
 export const setAudioMute = (pcId: string, muted: boolean) =>
   putAudio(pcId, 'mute', { muted });
 
+export type LightCommand = {
+  on?: boolean;
+  brightness?: number;
+  colorHex?: string;
+};
+
+export function setLight(id: string, command: LightCommand): Promise<unknown> {
+  return request(`/api/lights/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(command),
+  });
+}
+
 export type MusicAction = 'play' | 'pause' | 'next' | 'previous';
 
 export function runMusicAction(action: MusicAction): Promise<unknown> {

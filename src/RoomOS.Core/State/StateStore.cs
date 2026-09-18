@@ -19,6 +19,7 @@ public sealed class StateStore
     public event Action<TelemetryUpdated>? TelemetryUpdated;
     public event Action<AudioStateChanged>? AudioStateChanged;
     public event Action<NowPlayingChanged>? NowPlayingChanged;
+    public event Action<LightStateChanged>? LightStateChanged;
 
     public IReadOnlyDictionary<string, PcState> Pcs => _pcs;
     public IReadOnlyDictionary<string, AudioState> Audio => _audio;
@@ -57,6 +58,33 @@ public sealed class StateStore
         }
 
         PcStateChanged?.Invoke(new PcStateChanged(pcId, false, null));
+    }
+
+    private readonly ConcurrentDictionary<string, LightState> _lights = new();
+
+    public IReadOnlyDictionary<string, LightState> Lights => _lights;
+
+    public LightState? GetLight(string deviceId) =>
+        _lights.TryGetValue(deviceId, out var light) ? light : null;
+
+    public void SetLight(string deviceId, LightState light)
+    {
+        var previous = GetLight(deviceId);
+        _lights[deviceId] = light;
+
+        // Zigbee2MQTT republie l'état complet à chaque événement, y compris quand
+        // rien n'a bougé. Rediffuser à l'identique réveillerait l'iPad pour rien.
+        if (previous is not null
+            && previous.On == light.On
+            && previous.Brightness == light.Brightness
+            && previous.ColorHex == light.ColorHex
+            && previous.Reachable == light.Reachable)
+        {
+            return;
+        }
+
+        LightStateChanged?.Invoke(new LightStateChanged(
+            deviceId, light.On, light.Brightness, light.ColorHex, light.Reachable));
     }
 
     private MusicState _music = new(MusicLinkState.NotLinked, NowPlaying.Nothing);

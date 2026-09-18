@@ -9,6 +9,7 @@ using RoomOS.Core.Auth;
 using RoomOS.Core.Configuration;
 using RoomOS.Core.Data;
 using RoomOS.Core.Hubs;
+using RoomOS.Core.Integrations.Mqtt;
 using RoomOS.Core.Integrations.Spotify;
 using RoomOS.Core.Integrations.Wol;
 using RoomOS.Core.State;
@@ -39,6 +40,11 @@ builder.Services.AddHttpClient(SpotifyMusicProvider.HttpClientName);
 builder.Services.AddSingleton<SpotifyAuthService>();
 builder.Services.AddScoped<IMusicProvider, SpotifyMusicProvider>();
 builder.Services.AddHostedService<MusicPoller>();
+
+// Enregistré comme singleton puis exposé en service hébergé : les endpoints ont
+// besoin de la même instance pour publier des commandes.
+builder.Services.AddSingleton<MqttLightService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<MqttLightService>());
 builder.Services.AddHostedService<RoomBroadcaster>();
 
 builder.Services.AddSignalR();
@@ -83,6 +89,7 @@ app.MapStateEndpoints();
 app.MapPcEndpoints();
 app.MapAudioEndpoints();
 app.MapMusicEndpoints();
+app.MapLightEndpoints();
 
 app.MapHub<RoomHub>("/hub/room");
 app.MapHub<AgentHub>("/hub/agent");
