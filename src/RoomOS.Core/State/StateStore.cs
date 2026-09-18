@@ -43,6 +43,16 @@ public sealed class StateStore
     public void SetTelemetry(string pcId, Telemetry telemetry)
     {
         var previous = GetPc(pcId);
+
+        // Une télémétrie en vol peut arriver après la déconnexion de l'agent. Sans ce
+        // garde-fou, elle réinjecte des mesures dans l'état d'un PC déclaré hors ligne,
+        // et le prochain GET /api/state affiche des valeurs mortes comme si elles
+        // étaient vivantes.
+        if (!previous.Online)
+        {
+            return;
+        }
+
         _pcs[pcId] = previous with { Telemetry = telemetry, UpdatedAt = _time.GetUtcNow() };
         TelemetryUpdated?.Invoke(new TelemetryUpdated(pcId, telemetry));
     }

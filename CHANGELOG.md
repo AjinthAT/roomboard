@@ -44,6 +44,18 @@ Le projet ne suit pas SemVer : il suit ses jalons.
   élevée). Un contrôle `dotnet list package --vulnerable` a été ajouté à la CI.
 
 ### Corrigé
+- **Sélection des capteurs par nom.** Le relevé sur la machine réelle (i7-12700K,
+  RTX 5070 Ti) a montré quatre lectures fausses : température CPU et GPU pouvant
+  tomber sur un « Distance to TjMax » ou sur la jonction mémoire, VRAM sur un
+  compteur D3D, et RAM sur le bloc de mémoire virtuelle qui coexiste avec le bloc
+  physique. Chacune produisait un nombre plausible et faux.
+- **PawnIO rendu explicite.** LibreHardwareMonitor ne fournit plus de driver depuis
+  la 0.9.5 : sans PawnIO, toute lecture MSR renvoie `null` alors qu'`Open()` réussit
+  et que les capteurs GPU continuent de fonctionner. `--sensors` affiche désormais
+  son état.
+- **Télémétrie fantôme sur un PC hors ligne.** Une mesure en vol traitée après la
+  déconnexion réinjectait des valeurs dans l'état d'un PC déclaré éteint ; le
+  snapshot suivant les affichait comme vivantes.
 - Le volume `/data` était créé en root alors que le conteneur tourne en utilisateur
   non privilégié : SQLite ne pouvait pas ouvrir la base. Le répertoire est désormais
   créé et attribué dans l'image.

@@ -58,9 +58,11 @@ Vérifié le 2026-09-18, côté Core, avec un agent simulé :
 Restent à confirmer sur le matériel réel :
 - [x] Agent copié sur le PC, `--sensors` exécuté, matériel relevé
 - [x] Températures **GPU** réelles : `GPU Core` à 40,4 °C
-- [ ] Températures **CPU** : nécessitent PawnIO, non installé lors du premier essai.
-      L'intégrité de la mémoire est active sur ce PC, mais PawnIO la supporte —
-      aucun compromis de sécurité nécessaire. Voir `06-agent-windows.md`.
+- [x] Températures **CPU** réelles : `CPU Package` à 51 °C après installation de
+      PawnIO. L'intégrité de la mémoire est restée active — aucun compromis de
+      sécurité. Voir `06-agent-windows.md`.
+- [x] Les quatre corrections de capteurs confirmées sur le matériel : CPU 12,2 % /
+      51 °C, GPU 1 % / 41,6 °C, VRAM 2568 sur 16303 Mo, RAM 24,9 sur 63,7 Go.
 - [ ] Réveil effectif du PC (WoL activé dans le BIOS **et** sur la carte Intel)
 - [ ] Carte PC affichée sur l'iPad
 
