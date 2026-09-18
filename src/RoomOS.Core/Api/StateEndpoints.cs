@@ -41,6 +41,12 @@ public static class StateEndpoints
             .OrderBy(d => d.Id)
             .ToListAsync(ct);
 
+        var outputsByPc = (await db.AudioOutputs.AsNoTracking()
+                .OrderBy(o => o.SortOrder)
+                .ToListAsync(ct))
+            .GroupBy(o => o.PcDeviceId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
         var snapshot = new StateSnapshot(
             new RoomInfo(room.Id, room.Name),
             [.. pcs.Select(pc =>
@@ -53,13 +59,32 @@ public static class StateEndpoints
                     current.Uptime is { } uptime ? (long)uptime.TotalSeconds : null,
                     current.Telemetry);
             })],
-            pcs.ToDictionary(
-                pc => pc.Id,
-                pc => state.GetAudio(pc.Id) is { } a
-                    ? new AudioSnapshot(a.ActiveOutputId, a.Volume, a.Muted, a.Outputs)
-                    : new AudioSnapshot(null, 0, false, [])),
+            pcs.ToDictionary(pc => pc.Id, pc => BuildAudio(pc.Id, state, outputsByPc)),
             time.GetUtcNow());
 
         return Results.Ok(snapshot);
+    }
+
+    /// <summary>
+    /// État audio d'un PC. Tant que l'agent n'a rien poussé — Core redémarré, PC
+    /// éteint — on renvoie quand même les sorties déclarées en base, marquées
+    /// débranchées. Sans ça la carte Audio serait vide et l'utilisateur ne saurait
+    /// pas ce qui existe.
+    /// </summary>
+    private static AudioSnapshot BuildAudio(
+        string pcId,
+        StateStore state,
+        IReadOnlyDictionary<string, List<AudioOutput>> outputsByPc)
+    {
+        if (state.GetAudio(pcId) is { } live)
+        {
+            return new AudioSnapshot(live.ActiveOutputId, live.Volume, live.Muted, live.Outputs);
+        }
+
+        var known = outputsByPc.TryGetValue(pcId, out var rows) ? rows : [];
+
+        return new AudioSnapshot(
+            null, 0, false,
+            [.. known.Select(o => new AudioOutputInfo(o.Id, o.FriendlyName, false))]);
     }
 }

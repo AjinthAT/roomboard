@@ -3,7 +3,7 @@ import type { HubConnection, IRetryPolicy, RetryContext } from '@microsoft/signa
 import { roomStore } from '../store/roomStore';
 import { getState } from './client';
 import { readToken } from './token';
-import type { PcStateChanged, TelemetryUpdated } from './types';
+import type { AudioStateChanged, PcStateChanged, TelemetryUpdated } from './types';
 
 /**
  * Backoff exponentiel plafonné, **sans limite de tentatives**.
@@ -44,6 +44,15 @@ export function connectRoomHub(): { stop: () => void } {
 
   connection.on('TelemetryUpdated', (payload: TelemetryUpdated) => {
     roomStore.setTelemetry(payload.id, payload.telemetry);
+  });
+
+  connection.on('AudioStateChanged', (payload: AudioStateChanged) => {
+    roomStore.setAudio(payload.pcId, {
+      activeOutputId: payload.activeOutputId,
+      volume: payload.volume,
+      muted: payload.muted,
+      outputs: payload.outputs,
+    });
   });
 
   connection.onreconnecting(() => roomStore.setConnection('reconnecting'));

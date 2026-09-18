@@ -1,15 +1,16 @@
 import { useSyncExternalStore } from 'react';
-import type { PcSnapshot, StateSnapshot, Telemetry } from '../api/types';
+import type { AudioSnapshot, PcSnapshot, StateSnapshot, Telemetry } from '../api/types';
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'offline';
 
 export type RoomState = {
   roomName: string;
   pc: PcSnapshot | null;
+  audio: AudioSnapshot | null;
   connection: ConnectionStatus;
 };
 
-const EMPTY: RoomState = { roomName: '', pc: null, connection: 'connecting' };
+const EMPTY: RoomState = { roomName: '', pc: null, audio: null, connection: 'connecting' };
 
 /**
  * Store externe, hors du state React global.
@@ -52,10 +53,21 @@ class RoomStore {
   }
 
   loadSnapshot(snapshot: StateSnapshot): void {
+    const pc = snapshot.pcs[0] ?? null;
+
     this.set({
       roomName: snapshot.room.name,
-      pc: snapshot.pcs[0] ?? null,
+      pc,
+      audio: pc ? (snapshot.audio[pc.id] ?? null) : null,
     });
+  }
+
+  setAudio(pcId: string, audio: AudioSnapshot): void {
+    if (!this.state.pc || this.state.pc.id !== pcId) {
+      return;
+    }
+
+    this.set({ audio });
   }
 
   setConnection(connection: ConnectionStatus): void {

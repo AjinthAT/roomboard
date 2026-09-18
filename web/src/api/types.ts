@@ -22,9 +22,24 @@ export type PcSnapshot = {
   telemetry: Telemetry | null;
 };
 
+export type AudioOutputInfo = {
+  id: string;
+  name: string;
+  connected: boolean;
+};
+
+export type AudioSnapshot = {
+  /** null est un cas nominal : sortie active hors du registre. */
+  activeOutputId: string | null;
+  volume: number;
+  muted: boolean;
+  outputs: AudioOutputInfo[];
+};
+
 export type StateSnapshot = {
   room: { id: string; name: string };
   pcs: PcSnapshot[];
+  audio: Record<string, AudioSnapshot>;
   serverTime: string;
 };
 
@@ -37,4 +52,12 @@ export type PcStateChanged = {
 export type TelemetryUpdated = {
   id: string;
   telemetry: Telemetry;
+};
+
+export type AudioStateChanged = {
+  pcId: string;
+  activeOutputId: string | null;
+  volume: number;
+  muted: boolean;
+  outputs: AudioOutputInfo[];
 };
