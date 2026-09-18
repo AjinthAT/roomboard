@@ -63,9 +63,34 @@ public sealed class StateStore
 
     public void SetAudio(string pcId, AudioState state)
     {
+        var previous = GetAudio(pcId);
         _audio[pcId] = state;
+
+        // L'agent republie toutes les 10 s même sans changement, en filet. Rediffuser
+        // à l'identique réveillerait les clients pour rien.
+        //
+        // La comparaison est explicite : l'opérateur == d'un record compare
+        // IReadOnlyList par référence, et chaque publication porte une nouvelle liste.
+        if (!HasChanged(previous, state))
+        {
+            return;
+        }
+
         AudioStateChanged?.Invoke(
             new AudioStateChanged(pcId, state.ActiveOutputId, state.Volume, state.Muted, state.Outputs));
+    }
+
+    private static bool HasChanged(AudioState? previous, AudioState current)
+    {
+        if (previous is null)
+        {
+            return true;
+        }
+
+        return previous.ActiveOutputId != current.ActiveOutputId
+            || previous.Volume != current.Volume
+            || previous.Muted != current.Muted
+            || !previous.Outputs.SequenceEqual(current.Outputs);
     }
 
     public void SetTelemetry(string pcId, Telemetry telemetry)

@@ -60,4 +60,56 @@ public sealed class StateStoreTests
         Assert.False(state.Online);
         Assert.Null(state.Telemetry);
     }
+
+    private static AudioState Audio(string? active = "jbl", int volume = 16) =>
+        new(active, volume, false,
+            [new AudioOutputInfo("jbl", "JBL", true), new AudioOutputInfo("headset", "Casque", true)],
+            DateTimeOffset.UnixEpoch);
+
+    /// <summary>
+    /// L'agent republie l'état audio toutes les 10 s même sans changement. La
+    /// comparaison doit porter sur le contenu : l'égalité de record compare la liste
+    /// des sorties par référence, et chaque publication en porte une nouvelle.
+    /// </summary>
+    [Fact]
+    public void Un_etat_audio_identique_n_est_pas_rediffuse()
+    {
+        var store = NewStore();
+        var diffusions = 0;
+        store.AudioStateChanged += _ => diffusions++;
+
+        store.SetAudio("gaming-pc", Audio());
+        store.SetAudio("gaming-pc", Audio());
+        store.SetAudio("gaming-pc", Audio());
+
+        Assert.Equal(1, diffusions);
+    }
+
+    [Fact]
+    public void Un_changement_de_volume_est_diffuse()
+    {
+        var store = NewStore();
+        store.SetAudio("gaming-pc", Audio(volume: 16));
+
+        var diffusions = 0;
+        store.AudioStateChanged += _ => diffusions++;
+        store.SetAudio("gaming-pc", Audio(volume: 40));
+
+        Assert.Equal(1, diffusions);
+    }
+
+    [Fact]
+    public void Eteindre_le_pc_efface_la_sortie_active_et_debranche_tout()
+    {
+        var store = NewStore();
+        store.SetOnline("gaming-pc", TimeSpan.FromSeconds(10));
+        store.SetAudio("gaming-pc", Audio());
+
+        store.SetOffline("gaming-pc");
+
+        var audio = store.GetAudio("gaming-pc");
+        Assert.NotNull(audio);
+        Assert.Null(audio.ActiveOutputId);
+        Assert.All(audio.Outputs, o => Assert.False(o.Connected));
+    }
 }
