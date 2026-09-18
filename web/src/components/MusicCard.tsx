@@ -3,6 +3,7 @@ import { UnauthorizedError, runMusicAction } from '../api/client';
 import type { MusicAction } from '../api/client';
 import { MusicLink } from '../api/types';
 import { useRoom } from '../store/roomStore';
+import { DevicePicker, MusicVolume, Playlists, TrackProgress } from './MusicExtras';
 
 export function MusicCard({ onUnauthorized }: { onUnauthorized: () => void }) {
   const link = useRoom((s) => s.music.link);
@@ -41,6 +42,8 @@ export function MusicCard({ onUnauthorized }: { onUnauthorized: () => void }) {
         : link === MusicLink.Denied ? <Denied />
         : <Track />}
 
+      {link === MusicLink.Ready && <TrackProgress />}
+
       <div className="flex gap-3">
         <Control label="Précédent" glyph="◀◀" disabled={!live || !title} onClick={() => run('previous')} />
         <Control
@@ -51,6 +54,14 @@ export function MusicCard({ onUnauthorized }: { onUnauthorized: () => void }) {
         />
         <Control label="Suivant" glyph="▶▶" disabled={!live || !title} onClick={() => run('next')} />
       </div>
+
+      {link !== MusicLink.NotLinked && (
+        <>
+          <MusicVolume usable={live} onError={setError} />
+          <DevicePicker usable={live} onError={setError} onUnauthorized={onUnauthorized} />
+          <Playlists usable={live} onError={setError} />
+        </>
+      )}
 
       {error && <p className="text-xs text-red-400">{error}</p>}
     </section>

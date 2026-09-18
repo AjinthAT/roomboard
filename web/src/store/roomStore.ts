@@ -59,6 +59,7 @@ class RoomStore {
   /** Dernière télémétrie reçue, pas encore appliquée (voir le throttle). */
   private pendingTelemetry: Telemetry | null = null;
   private lastApplied = 0;
+  private musicReceivedAt = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
 
   /** Le serveur plafonne déjà à 1 Hz ; le client ne lui fait pas confiance. */
@@ -145,7 +146,15 @@ class RoomStore {
   }
 
   setMusic(music: MusicState): void {
+    // Horodatage de réception : la barre de progression avance ensuite toute seule
+    // côté client, et se recale à chaque message du serveur.
+    this.musicReceivedAt = Date.now();
     this.set({ music });
+  }
+
+  /** Millisecondes écoulées depuis la dernière position reçue. */
+  elapsedSinceMusicUpdate(): number {
+    return Date.now() - this.musicReceivedAt;
   }
 
   setAudio(pcId: string, audio: AudioSnapshot): void {

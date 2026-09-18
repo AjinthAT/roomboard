@@ -45,6 +45,17 @@ Une seule implémentation en V1 : `SpotifyMusicProvider`. N'en crée pas d'autre
 L'interface est une assurance contre un changement de politique Spotify, pas une
 invitation à ajouter Plex.
 
+### Fonctions ajoutées après M5
+
+- **Progression du morceau** : position poussée au changement de morceau et toutes
+  les 15 s, interpolée entre-temps côté client. Un déplacement manuel dans le morceau
+  n'est donc reflété qu'au battement suivant, soit 15 s au pire. C'est le compromis
+  retenu face à vingt messages par minute.
+- **Volume Spotify** via `PUT /me/player/volume`, distinct du volume Windows.
+- **Sélecteur d'appareil** via `POST /api/music/transfer`, qui réutilise le transfert
+  ajouté pour les scènes (ADR D11).
+- **Playlists** déclarées dans la configuration, jouées via `music.play` avec un URI.
+
 ### Implémentation
 
 - Flux **Authorization Code + PKCE**, une fois, depuis un navigateur.

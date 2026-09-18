@@ -1,4 +1,6 @@
+using Microsoft.Extensions.Options;
 using RoomOS.Core.Auth;
+using RoomOS.Core.Configuration;
 using RoomOS.Core.Data;
 using RoomOS.Core.Integrations.Spotify;
 using RoomOS.Core.State;
@@ -10,6 +12,7 @@ public static class MusicEndpoints
 {
     public sealed record PlayRequest(string? Uri);
     public sealed record VolumeRequest(int Level);
+    public sealed record TransferRequest(string DeviceId);
 
     public static IEndpointRouteBuilder MapMusicEndpoints(this IEndpointRouteBuilder app)
     {
@@ -34,6 +37,16 @@ public static class MusicEndpoints
 
         group.MapPost("/previous", (IMusicProvider music, CancellationToken ct) =>
             Guard(music.PreviousAsync, ct));
+
+        // Playlists mises en avant. Servies depuis la configuration : il n'y a pas
+        // d'éditeur en V1, et coder des URI en dur dans le front serait pire.
+        group.MapGet("/playlists", (IOptions<RoomOsOptions> options) =>
+            Results.Ok(options.Value.Spotify.Playlists
+                .Where(p => !string.IsNullOrWhiteSpace(p.Uri))
+                .Select(p => new { p.Name, p.Uri })));
+
+        group.MapPost("/transfer", (TransferRequest body, IMusicProvider music, CancellationToken ct) =>
+            Guard(ct => music.TransferToDeviceAsync(body.DeviceId, ct), ct));
 
         group.MapPut("/volume", (VolumeRequest body, IMusicProvider music, CancellationToken ct) =>
             body.Level is < 0 or > 100

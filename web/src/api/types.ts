@@ -54,6 +54,18 @@ export type MusicState = {
   nowPlaying: NowPlaying;
 };
 
+export type MusicDevice = {
+  id: string;
+  name: string;
+  isActive: boolean;
+  type: string;
+};
+
+export type Playlist = {
+  name: string;
+  uri: string;
+};
+
 export type LightSnapshot = {
   id: string;
   name: string;
