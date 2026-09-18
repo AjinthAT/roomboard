@@ -5,6 +5,56 @@ Toutes les évolutions notables de RoomOS. Une entrée par jalon de `docs/10-roa
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Le projet ne suit pas SemVer : il suit ses jalons.
 
+## Après M5 — Spotify enrichi — 2026-09-19
+
+Quatre ajouts qui exploitent ce que M3 récupérait déjà sans l'afficher.
+
+### Ajouté
+- **Barre de progression du morceau.** Le serveur ne pousse la position qu'au
+  changement de morceau et toutes les 15 s : sonder Spotify toutes les 3 s et tout
+  rediffuser ferait vingt messages par minute pour une valeur qui avance de façon
+  parfaitement prévisible. La barre progresse localement et se recale à chaque
+  message reçu.
+- **Volume Spotify**, distinct du volume Windows de la carte Audio.
+- **Sélecteur d'appareil de lecture** : PC, téléphone, enceinte. La liste n'est
+  rechargée que lorsque l'appareil actif change.
+- **Playlists mises en avant**, déclarées dans `deploy/.env`. Il n'y a pas d'éditeur
+  en V1, et coder des URI en dur dans le front serait pire.
+
+### Vérifié
+API et build. **Pas l'affichage** : Spotify était fermé au moment du test, donc aucun
+appareil actif et aucune position à rendre.
+
+## M5 — Scènes — 2026-09-18
+
+### Ajouté
+- Moteur de scènes déclaratif : séquentiel, timeout par étape, une étape en échec
+  n'interrompt pas la scène sauf un `pc.wake` bloquant, une seule exécution à la fois
+  et une nouvelle demande annule la précédente.
+- `IStepExecutor`, seule abstraction de ce type que `08-scenes.md` autorise, pour que
+  le moteur soit testable sans PC, sans ampoule et sans Spotify.
+- Les quatre scènes, **générées depuis la configuration** plutôt qu'écrites en dur.
+  Une étape visant un appareil non déclaré est omise, pas écrite puis vouée à l'échec.
+- `music.transfer` ajouté au DSL (ADR D11).
+- Barre de scènes avec progression réelle par étape, pilotée par les événements du
+  hub et non par un minuteur.
+- 7 tests du moteur et 8 du parsing du DSL, couvrant la liste imposée par `08-scenes.md`.
+
+### Ajouté après coup
+- **Confirmation en deux temps** sur redémarrer, éteindre et toute scène qui éteint
+  un PC. Le caractère sensible est calculé par le serveur à partir des étapes, jamais
+  d'une liste de noms.
+
+### Corrigé à l'audit
+- **Les exécutions n'étaient jamais purgées.** Chacune restait en mémoire à vie, sur
+  un panneau utilisé quotidiennement. Les vingt dernières sont conservées.
+- **Course à la libération du jeton d'annulation** : `Dispose()` précédait le verrou
+  qui libère l'exécution courante, si bien qu'une scène lancée dans cet intervalle
+  appelait `Cancel()` sur un objet libéré — `ObjectDisposedException`, donc 500,
+  précisément en enchaînant deux scènes.
+- Une exécution purgée pendant qu'elle tournait faisait lever `KeyNotFoundException`
+  à la mise à jour de son état.
+
 ## M4 — Lumières — 2026-09-18
 
 Codé et vérifié contre un Zigbee2MQTT simulé, en attendant le matériel.
