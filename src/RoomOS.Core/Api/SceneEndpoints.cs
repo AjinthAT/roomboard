@@ -20,11 +20,30 @@ public static class SceneEndpoints
         return app;
     }
 
-    public static async Task<List<SceneInfo>> ListAsync(RoomOsDbContext db, CancellationToken ct) =>
-        await db.Scenes.AsNoTracking()
+    public static async Task<List<SceneInfo>> ListAsync(RoomOsDbContext db, CancellationToken ct)
+    {
+        var scenes = await db.Scenes.AsNoTracking()
             .OrderBy(s => s.SortOrder)
-            .Select(s => new SceneInfo(s.Id, s.Name, s.Icon))
             .ToListAsync(ct);
+
+        return [.. scenes.Select(s => new SceneInfo(s.Id, s.Name, s.Icon, IsDestructive(s.StepsJson)))];
+    }
+
+    /// <summary>
+    /// Une scène est sensible si elle éteint un PC. Un DSL illisible est traité comme
+    /// sensible : dans le doute, on demande confirmation.
+    /// </summary>
+    private static bool IsDestructive(string stepsJson)
+    {
+        try
+        {
+            return SceneDsl.Parse(stepsJson).Steps.Any(s => s.Type == SceneStepTypes.PcShutdown);
+        }
+        catch (SceneDsl.InvalidSceneException)
+        {
+            return true;
+        }
+    }
 
     private static async Task<IResult> ListScenes(RoomOsDbContext db, CancellationToken ct) =>
         Results.Ok(await ListAsync(db, ct));

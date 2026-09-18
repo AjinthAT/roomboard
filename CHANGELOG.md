@@ -21,6 +21,14 @@ Codé et vérifié contre un Zigbee2MQTT simulé, en attendant le matériel.
   0–254 contre 0–100, et couleur CIE xy vers hexadécimal.
 - Carte Lumières : bascule, luminosité, pastille de couleur, état injoignable.
 
+### Ajouté après coup
+- **Confirmation en deux temps** sur redémarrer, éteindre, et toute scène qui éteint
+  un PC. Demandé à l'usage : sur un panneau mural, un doigt qui glisse ne doit pas
+  éteindre la machine.
+- **Distinction entre « pas encore appairée » et « injoignable ».** Une lampe déclarée
+  mais jamais vue par Zigbee2MQTT s'affichait comme injoignable, ce qui laissait
+  croire à une panne alors que l'installation n'était pas finie.
+
 ### Décidé
 - `Z2mFriendlyName` peut désigner une ampoule **ou un groupe** Zigbee2MQTT : plusieurs
   ampoules peuvent former une seule lumière sans toucher au modèle de données.

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { UnauthorizedError, runScene } from '../api/client';
 import { useRoom } from '../store/roomStore';
+import { useConfirm } from './useConfirm';
 
 export function SceneBar({ onUnauthorized }: { onUnauthorized: () => void }) {
   const scenes = useRoom((s) => s.scenes);
@@ -28,7 +29,14 @@ export function SceneBar({ onUnauthorized }: { onUnauthorized: () => void }) {
     <section className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {scenes.map((scene) => (
-          <SceneButton key={scene.id} id={scene.id} name={scene.name} live={live} onRun={launch} />
+          <SceneButton
+            key={scene.id}
+            id={scene.id}
+            name={scene.name}
+            destructive={scene.destructive}
+            live={live}
+            onRun={launch}
+          />
         ))}
       </div>
 
@@ -42,28 +50,45 @@ export function SceneBar({ onUnauthorized }: { onUnauthorized: () => void }) {
 function SceneButton({
   id,
   name,
+  destructive,
   live,
   onRun,
 }: {
   id: string;
   name: string;
+  destructive: boolean;
   live: boolean;
   onRun: (id: string) => void;
 }) {
   const running = useRoom((s) => s.sceneRun?.sceneId === id && s.sceneRun.status === 'running');
+  const { armed, arm, disarm } = useConfirm();
+
+  // Night éteint le PC. Le caractère sensible vient du serveur, qui le déduit des
+  // étapes : aucune scène n'est traitée à part par son nom.
+  function handle() {
+    if (destructive && !armed) {
+      arm();
+      return;
+    }
+
+    disarm();
+    onRun(id);
+  }
 
   return (
     <button
       type="button"
       disabled={!live}
-      onClick={() => onRun(id)}
+      onClick={handle}
       className={`min-h-14 rounded-xl border px-4 text-base transition-colors disabled:opacity-40 ${
-        running
-          ? 'border-neutral-500 bg-neutral-800 text-neutral-100'
-          : 'border-neutral-800 bg-neutral-900 text-neutral-300 active:bg-neutral-800'
+        armed
+          ? 'border-amber-600 bg-amber-950/40 text-amber-200'
+          : running
+            ? 'border-neutral-500 bg-neutral-800 text-neutral-100'
+            : 'border-neutral-800 bg-neutral-900 text-neutral-300 active:bg-neutral-800'
       }`}
     >
-      {name}
+      {armed ? 'Confirmer ?' : name}
     </button>
   );
 }

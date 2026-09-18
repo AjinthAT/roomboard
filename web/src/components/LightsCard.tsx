@@ -72,9 +72,13 @@ function LightRow({
 
         <span className="flex-1 truncate text-neutral-300">{light.name}</span>
 
-        {/* Injoignable n'est pas éteinte : la lampe est coupée au mur ou hors de
-            portée, et on ne peut rien lui demander. */}
-        {!light.reachable && <span className="text-xs text-neutral-600">injoignable</span>}
+        {/* Trois états distincts, et la nuance compte : pas encore appairée n'est
+            pas une panne, injoignable en est une, et éteinte n'est ni l'une ni l'autre. */}
+        {!light.paired ? (
+          <span className="text-xs text-neutral-600">pas encore appairée</span>
+        ) : !light.reachable ? (
+          <span className="text-xs text-amber-600/80">injoignable</span>
+        ) : null}
       </div>
 
       {light.supportsBrightness && (

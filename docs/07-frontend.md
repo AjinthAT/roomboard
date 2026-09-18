@@ -60,6 +60,14 @@ Une seule page. Pas de router. Grille 2×2 + barre de scènes.
   figée : sans hub, on ne sait pas, et le dire vaut mieux que le deviner.
 - Si un `POST` échoue, l'UI revient à l'état serveur. **Pas d'optimistic update**
   sur les actions physiques : un bouton qui ment est pire qu'un bouton lent.
+- **Confirmation en deux temps sur les actions irréversibles** : redémarrer, éteindre,
+  et toute scène qui éteint un PC. Le bouton devient « Confirmer ? » et se désarme
+  seul au bout de quelques secondes. Pas de fenêtre modale : sur un panneau mural,
+  une modale demande de viser une petite cible et se ferme par réflexe. Un bouton
+  laissé armé serait un piège pour le passage suivant, d'où le désarmement.
+- Le caractère sensible d'une scène est **calculé par le serveur** à partir de ses
+  étapes, jamais d'une liste de noms : une scène ajoutée plus tard qui éteint le poste
+  sera protégée sans qu'on ait à y penser.
 - Si `activeOutputId` est `null`, la carte Audio affiche « sortie inconnue » et
   **aucun** bouton de sortie n'est marqué actif. Ne jamais retomber sur le premier
   de la liste : ce serait exactement le bouton qui ment.

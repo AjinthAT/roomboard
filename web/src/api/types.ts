@@ -62,6 +62,8 @@ export type LightSnapshot = {
   colorHex: string | null;
   /** Faux quand Zigbee2MQTT signale la lampe injoignable, coupée au mur par exemple. */
   reachable: boolean;
+  /** Faux tant que Zigbee2MQTT n'a jamais parlé de cette lampe : elle n'est pas appairée. */
+  paired: boolean;
   supportsColor: boolean;
   supportsBrightness: boolean;
 };
@@ -70,6 +72,8 @@ export type SceneInfo = {
   id: string;
   name: string;
   icon: string;
+  /** Vrai si la scène éteint un PC : l'UI demande alors une confirmation. */
+  destructive: boolean;
 };
 
 export type SceneStarted = { runId: string; sceneId: string };

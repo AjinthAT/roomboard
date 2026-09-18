@@ -53,6 +53,7 @@ public static class LightEndpoints
                 live?.Brightness,
                 live?.ColorHex,
                 live?.Reachable ?? false,
+                Paired: live is not null,
                 config?.SupportsColor ?? false,
                 config?.SupportsBrightness ?? true);
         })];
