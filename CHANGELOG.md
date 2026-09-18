@@ -32,6 +32,13 @@ Le projet ne suit pas SemVer : il suit ses jalons.
 - **Schéma limité à ce que M1 utilise.** Les autres tables viendront avec leurs jalons.
 
 ### Sécurité
+- **Revue de sécurité de fin de M1.** Deux failles d'autorisation corrigées sur le
+  hub agent : `PushTelemetry` recevait le `pcId` dans sa charge utile, donc tout agent
+  authentifié pouvait écrire l'état d'un autre PC — le PC est désormais déduit de la
+  connexion, ce qui rejoint au passage la charge utile décrite dans `05-api.md` ;
+  et `Register` acceptait n'importe quel identifiant, y compris absent de la base —
+  il est maintenant validé. Le jeton agent dit « c'est un agent », pas « c'est cet
+  agent-là ».
 - EF Core monté de 10.0.0 à 10.0.12 : la version initiale tirait
   `SQLitePCLRaw.lib.e_sqlite3` 2.1.11, affecté par GHSA-2m69-gcr7-jv3q (gravité
   élevée). Un contrôle `dotnet list package --vulnerable` a été ajouté à la CI.

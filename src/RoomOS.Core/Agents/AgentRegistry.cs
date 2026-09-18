@@ -36,6 +36,10 @@ public sealed class AgentRegistry
         return pcId;
     }
 
+    /// <summary>PC associé à une connexion, ou <c>null</c> si elle n'a pas encore appelé Register.</summary>
+    public string? GetPc(string connectionId) =>
+        _pcByConnection.TryGetValue(connectionId, out var pcId) ? pcId : null;
+
     public string? GetConnection(string pcId) =>
         _connectionByPc.TryGetValue(pcId, out var connectionId) ? connectionId : null;
 

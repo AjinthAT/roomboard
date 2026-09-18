@@ -72,6 +72,8 @@ Restent à confirmer sur le matériel réel :
   `integration_tokens` et `settings` arriveront avec les jalons qui les utilisent.
 - **EF Core monté en 10.0.12** : la 10.0.0 tirait un `SQLitePCLRaw` vulnérable
   (GHSA-2m69-gcr7-jv3q). Un contrôle a été ajouté à la CI pour éviter la récidive.
+- **Le PC d'un agent est déduit de sa connexion**, jamais de la charge utile.
+  Corrigé à la revue de sécurité de fin de jalon.
 
 ## M2 — Audio
 - [ ] Énumération des sorties par l'agent

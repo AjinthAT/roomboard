@@ -115,7 +115,7 @@ public sealed class AgentWorker(
             try
             {
                 await connection.InvokeAsync(
-                    AgentProtocol.ToCore.PushTelemetry, _options.PcId, telemetry.Read(), ct);
+                    AgentProtocol.ToCore.PushTelemetry, telemetry.Read(), ct);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
