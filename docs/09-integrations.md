@@ -68,7 +68,7 @@ invitation à ajouter Plex.
 
 ### Problème ouvert : l'appareil actif n'est pas forcément le PC
 
-Constaté en M3 : l'appareil actif était un téléphone (« S25 de Ajinthan »). Les
+Constaté en M3 : l'appareil actif était un téléphone (« un téléphone Android »). Les
 endpoints Player s'appliquent à **l'appareil actif du compte**, pas à une machine
 choisie. Conséquences :
 

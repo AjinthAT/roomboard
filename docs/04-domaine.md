@@ -25,7 +25,7 @@
 `config_json` selon `kind` :
 ```jsonc
 // pc
-{ "mac": "C8:7F:54:68:BB:40", "ip": "192.168.1.150", "broadcast": "192.168.1.255" }
+{ "mac": "AA:BB:CC:DD:EE:FF", "ip": "192.168.1.150", "broadcast": "192.168.1.255" }
 // light
 { "z2mFriendlyName": "desk_light", "supportsColor": true, "supportsBrightness": true }
 ```

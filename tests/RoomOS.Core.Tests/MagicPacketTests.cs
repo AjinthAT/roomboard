@@ -8,9 +8,9 @@ namespace RoomOS.Core.Tests;
 /// </summary>
 public sealed class MagicPacketTests
 {
-    private const string Mac = "C8:7F:54:68:BB:40";
+    private const string Mac = "AA:BB:CC:DD:EE:FF";
 
-    private static readonly byte[] Expected = [0xC8, 0x7F, 0x54, 0x68, 0xBB, 0x40];
+    private static readonly byte[] Expected = [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF];
 
     [Fact]
     public void Le_paquet_fait_toujours_102_octets()
@@ -38,19 +38,19 @@ public sealed class MagicPacketTests
     }
 
     [Theory]
-    [InlineData("C8:7F:54:68:BB:40")]
-    [InlineData("C8-7F-54-68-BB-40")]
-    [InlineData("c8-7f-54-68-bb-40")]
-    [InlineData("C87F5468BB40")]
+    [InlineData("AA:BB:CC:DD:EE:FF")]
+    [InlineData("AA-BB-CC-DD-EE-FF")]
+    [InlineData("aa-bb-cc-dd-ee-ff")]
+    [InlineData("AABBCCDDEEFF")]
     public void Les_separateurs_et_la_casse_sont_acceptes(string mac)
     {
         Assert.Equal(Expected, MagicPacket.ParseMac(mac));
     }
 
     [Theory]
-    [InlineData("C8:7F:54:68:BB")]
-    [InlineData("C8:7F:54:68:BB:40:12")]
-    [InlineData("ZZ:7F:54:68:BB:40")]
+    [InlineData("AA:BB:CC:DD:EE")]
+    [InlineData("AA:BB:CC:DD:EE:FF:12")]
+    [InlineData("ZZ:BB:CC:DD:EE:FF")]
     public void Une_mac_malformee_est_rejetee(string mac)
     {
         Assert.Throws<FormatException>(() => MagicPacket.ParseMac(mac));

@@ -85,7 +85,7 @@ si l'une devient la sortie active, `activeOutputId` vaut `null` et l'UI affiche
 |---|---|---|
 | `CORE_HOST` | **`192.168.1.30`** | VM `vm-102`, `ens18`, **IP statique** dans `/etc/network/interfaces`. Rien à réserver côté DHCP. |
 | `CORE_PORT` | `8080` | HTTP |
-| `PC_MAC` | **`C8:7F:54:68:BB:40`** | Carte Intel Ethernet. Ni le Bluetooth, ni les TAP-Windows d'OpenVPN. |
+| `PC_MAC` | **`AA:BB:CC:DD:EE:FF`** | Carte Intel Ethernet. Ni le Bluetooth, ni les TAP-Windows d'OpenVPN. |
 | `PC_IP` | **`192.168.1.150`** | IP statique, confirmée |
 
 > Les deux adresses sont statiques, configurées sur les machines elles-mêmes. Aucune

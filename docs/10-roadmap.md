@@ -49,7 +49,7 @@ Vérifié le 2026-09-18, côté Core, avec un agent simulé :
   et télémétrie remise à zéro, sans ping.
 - Commandes : `shutdown` → reçue par l'agent → `Ack` tracé par le Core. `409` quand
   l'agent est absent, `404` sur un PC inconnu.
-- Wake-on-LAN : paquet magique réellement émis vers `C8:7F:54:68:BB:40`, 202 immédiat.
+- Wake-on-LAN : paquet magique réellement émis vers `AA:BB:CC:DD:EE:FF`, 202 immédiat.
 - Télémétrie : 6 ticks en 12 s côté client, soit 0,5 Hz — le plafond serveur de 1 Hz
   n'est jamais atteint, exactement comme prévu.
 - Base persistée dans le volume Docker, survit à un `compose restart`.
