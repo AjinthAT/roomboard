@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RoomOS.Agent.Windows/RoomOS.Agent.Windows.csproj" />
+    <Project Path="src/RoomOS.Core/RoomOS.Core.csproj" />
+    <Project Path="src/RoomOS.Domain/RoomOS.Domain.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RoomOS.Core.Tests/RoomOS.Core.Tests.csproj" />
+  </Folder>
+</Solution>
