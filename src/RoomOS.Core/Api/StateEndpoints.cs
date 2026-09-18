@@ -60,6 +60,7 @@ public static class StateEndpoints
                     current.Telemetry);
             })],
             pcs.ToDictionary(pc => pc.Id, pc => BuildAudio(pc.Id, state, outputsByPc)),
+            state.Music,
             time.GetUtcNow());
 
         return Results.Ok(snapshot);

@@ -9,11 +9,14 @@ public static class RoomProtocol
     public const string PcStateChanged = "PcStateChanged";
     public const string TelemetryUpdated = "TelemetryUpdated";
     public const string AudioStateChanged = "AudioStateChanged";
+    public const string NowPlayingChanged = "NowPlayingChanged";
 }
 
 public sealed record PcStateChanged(string Id, bool Online, long? UptimeSec);
 
 public sealed record TelemetryUpdated(string Id, Telemetry Telemetry);
+
+public sealed record NowPlayingChanged(MusicLinkState Link, NowPlaying NowPlaying);
 
 public sealed record AudioStateChanged(
     string PcId,

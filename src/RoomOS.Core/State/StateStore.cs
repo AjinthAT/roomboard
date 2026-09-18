@@ -18,6 +18,7 @@ public sealed class StateStore
     public event Action<PcStateChanged>? PcStateChanged;
     public event Action<TelemetryUpdated>? TelemetryUpdated;
     public event Action<AudioStateChanged>? AudioStateChanged;
+    public event Action<NowPlayingChanged>? NowPlayingChanged;
 
     public IReadOnlyDictionary<string, PcState> Pcs => _pcs;
     public IReadOnlyDictionary<string, AudioState> Audio => _audio;
@@ -57,6 +58,30 @@ public sealed class StateStore
 
         PcStateChanged?.Invoke(new PcStateChanged(pcId, false, null));
     }
+
+    private MusicState _music = new(MusicLinkState.NotLinked, NowPlaying.Nothing);
+
+    public MusicState Music => _music;
+
+    public void SetMusic(MusicState music)
+    {
+        var previous = _music;
+        _music = music;
+
+        // La progression du morceau avance à chaque sondage : la diffuser ferait un
+        // message toutes les 3 s pour une valeur que l'UI n'affiche pas en continu.
+        // Seul un vrai changement compte.
+        if (previous.Link == music.Link && SameTrack(previous.NowPlaying, music.NowPlaying))
+        {
+            return;
+        }
+
+        NowPlayingChanged?.Invoke(new NowPlayingChanged(music.Link, music.NowPlaying));
+    }
+
+    private static bool SameTrack(NowPlaying a, NowPlaying b) =>
+        a.Title == b.Title && a.Artist == b.Artist && a.IsPlaying == b.IsPlaying
+        && a.AlbumArtUrl == b.AlbumArtUrl && a.DeviceName == b.DeviceName;
 
     public AudioState? GetAudio(string pcId) =>
         _audio.TryGetValue(pcId, out var state) ? state : null;
