@@ -1,0 +1,20 @@
+# RoomOS — configuration Prometheus.
+#
+# C'est ici que vit l'historique de la télémétrie. Le Core n'en garde que le dernier
+# échantillon, en mémoire (ADR D6) : écrire une mesure par seconde en SQLite ferait
+# gonfler le fichier pour une donnée sans valeur historique.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: roomos-core
+    static_configs:
+      # Le Core tourne en réseau hôte (Wake-on-LAN), il n'a donc pas de nom de service
+      # Docker. host-gateway donne l'adresse de l'hôte depuis le réseau bridge.
+      - targets: ["host.docker.internal:8080"]
+
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]

@@ -56,6 +56,49 @@ services:
     depends_on:
       - mosquitto
 
+  # Historique de la télémétrie. Le Core n'en garde que le dernier échantillon en
+  # mémoire (ADR D6) ; c'est Prometheus qui conserve, en scrutant /metrics.
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    container_name: roomos-prometheus
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      # 30 jours suffisent pour repérer une dérive thermique ; au-delà, la VM a
+      # mieux à faire de ses 30 Go.
+      - --storage.tsdb.retention.time=30d
+    extra_hosts:
+      # Le Core est en réseau hôte : il n'a pas de nom de service Docker.
+      - "host.docker.internal:host-gateway"
+    # La VM a 3,8 Go et fait déjà tourner le Core, Mosquitto et Zigbee2MQTT.
+    mem_limit: 512m
+
+  grafana:
+    image: grafana/grafana:11.5.1
+    container_name: roomos-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-roomos}
+      # Pas d'inscription ni d'analytics sur un tableau de bord domestique.
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+    mem_limit: 384m
+    depends_on:
+      - prometheus
+
 volumes:
   roomos-data:
   mosquitto-data:
+  prometheus-data:
+  grafana-data:
