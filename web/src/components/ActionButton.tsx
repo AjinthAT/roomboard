@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { UnauthorizedError, runPcAction } from '../api/client';
 import type { PcAction } from '../api/client';
+import { useConfirm } from './useConfirm';
 
 type Status = 'idle' | 'pending' | 'failed';
 
@@ -14,18 +15,23 @@ export function ActionButton({
   action,
   label,
   disabled,
+  confirm = false,
   onUnauthorized,
 }: {
   pcId: string;
   action: PcAction;
   label: string;
   disabled: boolean;
+  /** Demande un second appui. Réservé aux actions qu'on ne peut pas défaire. */
+  confirm?: boolean;
   onUnauthorized: () => void;
 }) {
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
+  const { armed, arm, disarm } = useConfirm();
 
   async function run() {
+    disarm();
     setStatus('pending');
     setError(null);
 
@@ -47,10 +53,14 @@ export function ActionButton({
       <button
         type="button"
         disabled={disabled || status === 'pending'}
-        onClick={run}
-        className="min-h-11 min-w-24 rounded-lg border border-neutral-800 bg-neutral-900 px-4 text-neutral-200 transition-colors active:bg-neutral-800 disabled:opacity-40"
+        onClick={confirm && !armed ? arm : run}
+        className={`min-h-11 min-w-24 rounded-lg border px-4 transition-colors disabled:opacity-40 ${
+          armed
+            ? 'border-amber-600 bg-amber-950/40 text-amber-200'
+            : 'border-neutral-800 bg-neutral-900 text-neutral-200 active:bg-neutral-800'
+        }`}
       >
-        {status === 'pending' ? '…' : label}
+        {status === 'pending' ? '…' : armed ? 'Confirmer ?' : label}
       </button>
       {error && <span className="text-xs text-red-400">{error}</span>}
     </div>

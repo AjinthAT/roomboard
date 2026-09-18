@@ -29,8 +29,8 @@ export function PcCard({ onUnauthorized }: { onUnauthorized: () => void }) {
 
       <div className="flex flex-wrap gap-3">
         <ActionButton pcId={id} action="wake" label="Allumer" disabled={!live || online} onUnauthorized={onUnauthorized} />
-        <ActionButton pcId={id} action="restart" label="Redémarrer" disabled={!live || !online} onUnauthorized={onUnauthorized} />
-        <ActionButton pcId={id} action="shutdown" label="Éteindre" disabled={!live || !online} onUnauthorized={onUnauthorized} />
+        <ActionButton pcId={id} action="restart" label="Redémarrer" disabled={!live || !online} confirm onUnauthorized={onUnauthorized} />
+        <ActionButton pcId={id} action="shutdown" label="Éteindre" disabled={!live || !online} confirm onUnauthorized={onUnauthorized} />
       </div>
     </section>
   );

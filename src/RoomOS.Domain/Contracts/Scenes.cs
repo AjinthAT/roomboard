@@ -70,7 +70,15 @@ public sealed record SceneRun(
     IReadOnlyList<SceneStepResult> Steps,
     DateTimeOffset StartedAt);
 
-public sealed record SceneInfo(string Id, string Name, string Icon);
+/// <summary>
+/// Une scène telle que l'UI la liste.
+/// </summary>
+/// <param name="Destructive">
+/// Vrai si la scène éteint un PC. Calculé à partir de ses étapes, pas d'une liste
+/// d'identifiants : une scène ajoutée plus tard qui éteint le poste sera marquée
+/// sans qu'on ait à y penser.
+/// </param>
+public sealed record SceneInfo(string Id, string Name, string Icon, bool Destructive);
 
 // Événements poussés sur le hub client pendant l'exécution.
 public sealed record SceneStarted(string RunId, string SceneId);
