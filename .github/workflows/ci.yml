@@ -21,14 +21,17 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
+      # Sur la solution entière, et non sur une liste de projets : MSBuild n'accepte
+      # qu'un projet par commande, ce qui faisait échouer ce job depuis M0 sans que
+      # personne le voie — la CI n'avait jamais tourné.
       - name: Restore
-        run: dotnet restore src/RoomOS.Core tests/RoomOS.Core.Tests
+        run: dotnet restore RoomOS.slnx
 
       - name: Build
-        run: dotnet build src/RoomOS.Core tests/RoomOS.Core.Tests -c Release --no-restore
+        run: dotnet build RoomOS.slnx -c Release --no-restore
 
       - name: Test
-        run: dotnet test tests/RoomOS.Core.Tests -c Release --no-build
+        run: dotnet test RoomOS.slnx -c Release --no-build
 
       # Ajouté après qu'EF Core 10.0.0 a tiré un SQLitePCLRaw vulnérable (GHSA-2m69-gcr7-jv3q).
       # Le test est inversé à dessein : on exige la phrase « aucun paquet vulnérable »
