@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { HubConnection } from '@microsoft/signalr';
 import { UnauthorizedError, getState } from './api/client';
 import { connectRoomHub } from './api/hub';
 import { clearToken, readToken } from './api/token';
@@ -25,7 +24,7 @@ export function App() {
     }
 
     const controller = new AbortController();
-    let hub: HubConnection | null = null;
+    let hub: { stop: () => void } | null = null;
 
     // Snapshot complet d'abord, puis seulement les deltas par le hub.
     getState(controller.signal)
@@ -48,7 +47,7 @@ export function App() {
 
     return () => {
       controller.abort();
-      void hub?.stop();
+      hub?.stop();
     };
   }, [phase, forgetToken]);
 

@@ -47,8 +47,17 @@ Une seule page. Pas de router. Grille 2×2 + barre de scènes.
 
 - Au montage : `GET /api/state`, remplit le store.
 - Puis `@microsoft/signalr` sur `/hub/room`, avec `withAutomaticReconnect`.
+- **La reconnexion ne renonce jamais.** La politique par défaut de SignalR abandonne
+  après quatre tentatives, soit 42 secondes. Sur un panneau allumé en permanence,
+  toute coupure plus longue — redémarrage du Core, iPad en veille, Wi-Fi qui tombe —
+  laissait l'écran figé sur « Connexion perdue » jusqu'à un rechargement manuel.
+  Backoff exponentiel plafonné à 15 s, sans limite de tentatives.
+- **Toute reconnexion refait un `GET /api/state`.** Les deltas émis pendant la coupure
+  sont définitivement perdus : repasser le bandeau au vert sans resynchroniser
+  afficherait un état arbitrairement périmé avec l'apparence du direct.
 - Bandeau discret « Reconnexion… » si le hub est down. Les contrôles restent visibles
-  mais désactivés.
+  mais **désactivés**, et l'état du PC affiche « État inconnu » plutôt qu'une valeur
+  figée : sans hub, on ne sait pas, et le dire vaut mieux que le deviner.
 - Si un `POST` échoue, l'UI revient à l'état serveur. **Pas d'optimistic update**
   sur les actions physiques : un bouton qui ment est pire qu'un bouton lent.
 - Si `activeOutputId` est `null`, la carte Audio affiche « sortie inconnue » et

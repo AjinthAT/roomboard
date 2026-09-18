@@ -6,6 +6,10 @@ export function PcCard({ onUnauthorized }: { onUnauthorized: () => void }) {
   const name = useRoom((s) => s.pc?.name ?? '');
   const online = useRoom((s) => s.pc?.online ?? false);
 
+  // Hub coupé : l'état affiché peut être périmé, on ne laisse pas agir dessus
+  // (docs/07-frontend.md). Les boutons restent visibles, comme spécifié.
+  const live = useRoom((s) => s.connection === 'connected');
+
   if (!id) {
     return null;
   }
@@ -24,9 +28,9 @@ export function PcCard({ onUnauthorized }: { onUnauthorized: () => void }) {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <ActionButton pcId={id} action="wake" label="Allumer" disabled={online} onUnauthorized={onUnauthorized} />
-        <ActionButton pcId={id} action="restart" label="Redémarrer" disabled={!online} onUnauthorized={onUnauthorized} />
-        <ActionButton pcId={id} action="shutdown" label="Éteindre" disabled={!online} onUnauthorized={onUnauthorized} />
+        <ActionButton pcId={id} action="wake" label="Allumer" disabled={!live || online} onUnauthorized={onUnauthorized} />
+        <ActionButton pcId={id} action="restart" label="Redémarrer" disabled={!live || !online} onUnauthorized={onUnauthorized} />
+        <ActionButton pcId={id} action="shutdown" label="Éteindre" disabled={!live || !online} onUnauthorized={onUnauthorized} />
       </div>
     </section>
   );
@@ -34,6 +38,18 @@ export function PcCard({ onUnauthorized }: { onUnauthorized: () => void }) {
 
 function StatusLine({ online }: { online: boolean }) {
   const uptime = useRoom((s) => s.pc?.uptimeSec ?? null);
+  const live = useRoom((s) => s.connection === 'connected');
+
+  // Sans hub, on ne sait plus : on le dit au lieu d'afficher un état figé
+  // comme s'il était frais.
+  if (!live) {
+    return (
+      <span className="flex items-center gap-2 text-sm text-neutral-500">
+        <span className="size-2 rounded-full bg-amber-600" />
+        État inconnu
+      </span>
+    );
+  }
 
   return (
     <span className="flex items-center gap-2 text-sm text-neutral-400">

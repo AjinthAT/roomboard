@@ -53,6 +53,12 @@ Le projet ne suit pas SemVer : il suit ses jalons.
   la 0.9.5 : sans PawnIO, toute lecture MSR renvoie `null` alors qu'`Open()` réussit
   et que les capteurs GPU continuent de fonctionner. `--sensors` affiche désormais
   son état.
+- **« Connexion perdue » définitif sur le panneau.** `withAutomaticReconnect()` sans
+  argument abandonne après quatre tentatives ; passé 42 secondes de coupure, l'iPad
+  ne réessayait plus jamais tout en continuant d'afficher le dernier état connu comme
+  s'il était vivant. Politique de reconnexion illimitée, resynchronisation par
+  `GET /api/state` à chaque reprise, contrôles désactivés et état marqué « inconnu »
+  tant que le hub est coupé.
 - **Wake-on-LAN inopérant en conteneur.** Le paquet magique est un broadcast dirigé ;
   depuis un bridge Docker il n'atteint jamais le LAN, et l'émission réussit pourtant
   sans erreur. Capture à l'appui : zéro paquet sur `ens18` en bridge, 102 octets aux
