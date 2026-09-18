@@ -7,28 +7,32 @@ namespace RoomOS.Agent.Windows;
 /// Lit les capteurs matériels via LibreHardwareMonitor.
 /// </summary>
 /// <remarks>
-/// Deux règles tirées de docs/06-agent-windows.md :
-/// on appelle <c>Update()</c> avant chaque lecture, sinon les valeurs sont figées ;
-/// et on ne matche jamais un capteur sur son nom, parce que les noms changent d'une
-/// version de pilote GPU à l'autre. Toute température est nullable de bout en bout :
-/// si un capteur disparaît, l'agent publie quand même l'usage et la RAM.
+/// <para>
+/// On appelle <c>Update()</c> avant chaque lecture, sinon les valeurs sont figées.
+/// </para>
+/// <para>
+/// La sélection se fait par <b>liste de noms ordonnée</b>, pas par « premier capteur
+/// du bon type ». Un i7-12700K expose une quarantaine de capteurs de température,
+/// dont des « Distance to TjMax » qui sont des écarts et non des températures ; un
+/// GPU NVIDIA expose « GPU Core » et « GPU Memory Junction », dix degrés d'écart.
+/// Prendre le premier venu donne une valeur plausible et fausse — le pire des cas.
+/// </para>
+/// <para>
+/// Les noms changent d'une version de pilote à l'autre : chaque lecture a donc
+/// plusieurs candidats, et toute température reste nullable jusqu'à l'UI.
+/// </para>
 /// </remarks>
-public sealed class TelemetryReader : IDisposable
+public sealed class TelemetryReader(ILogger<TelemetryReader> logger) : IDisposable
 {
-    private readonly Computer _computer;
-    private readonly ILogger<TelemetryReader> _logger;
-    private bool _opened;
-
-    public TelemetryReader(ILogger<TelemetryReader> logger)
+    private readonly Computer _computer = new()
     {
-        _logger = logger;
-        _computer = new Computer
-        {
-            IsCpuEnabled = true,
-            IsGpuEnabled = true,
-            IsMemoryEnabled = true,
-        };
-    }
+        IsCpuEnabled = true,
+        IsGpuEnabled = true,
+        IsMemoryEnabled = true,
+    };
+
+    private bool _opened;
+    private bool _warnedAboutTemperatures;
 
     /// <summary>
     /// Ouvre l'accès aux capteurs. Échoue si le driver noyau ne peut pas être chargé,
@@ -44,9 +48,9 @@ public sealed class TelemetryReader : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(
+            logger.LogError(
                 ex,
-                "Impossible d'ouvrir les capteurs. Le driver est probablement bloqué par " +
+                "Impossible d'ouvrir les capteurs. Driver probablement bloqué par " +
                 "l'intégrité de la mémoire (Sécurité Windows → Isolation du noyau). " +
                 "L'agent continue sans températures.");
             return false;
@@ -55,13 +59,13 @@ public sealed class TelemetryReader : IDisposable
 
     public Telemetry Read()
     {
-        double cpuUsage = 0, gpuUsage = 0, ramUsed = 0, ramTotal = 0;
-        double? cpuTemp = null, gpuTemp = null, vramUsed = null, vramTotal = null;
-
         if (!_opened)
         {
             return new Telemetry(0, null, 0, null, null, null, 0, 0);
         }
+
+        double cpuUsage = 0, gpuUsage = 0, ramUsedMb = 0, ramTotalMb = 0;
+        double? cpuTemp = null, gpuTemp = null, vramUsed = null, vramTotal = null;
 
         foreach (var hardware in _computer.Hardware)
         {
@@ -75,61 +79,81 @@ public sealed class TelemetryReader : IDisposable
             switch (hardware.HardwareType)
             {
                 case HardwareType.Cpu:
-                    cpuUsage = FindValue(hardware, SensorType.Load, "total") ?? cpuUsage;
-                    cpuTemp = FindFirst(hardware, SensorType.Temperature) ?? cpuTemp;
+                    cpuUsage = Pick(hardware, SensorType.Load, "CPU Total") ?? cpuUsage;
+                    cpuTemp = Pick(hardware, SensorType.Temperature,
+                        "CPU Package", "Core Average", "Core Max") ?? cpuTemp;
                     break;
 
                 case HardwareType.GpuNvidia:
                 case HardwareType.GpuAmd:
                 case HardwareType.GpuIntel:
-                    gpuUsage = FindValue(hardware, SensorType.Load, "core") ?? gpuUsage;
-                    gpuTemp = FindFirst(hardware, SensorType.Temperature) ?? gpuTemp;
-                    vramUsed = FindValue(hardware, SensorType.SmallData, "used") ?? vramUsed;
-                    vramTotal = FindValue(hardware, SensorType.SmallData, "total") ?? vramTotal;
+                    gpuUsage = Pick(hardware, SensorType.Load, "GPU Core") ?? gpuUsage;
+                    gpuTemp = Pick(hardware, SensorType.Temperature,
+                        "GPU Core", "GPU Hot Spot", "GPU Temperature") ?? gpuTemp;
+                    vramUsed = Pick(hardware, SensorType.SmallData, "GPU Memory Used") ?? vramUsed;
+                    vramTotal = Pick(hardware, SensorType.SmallData, "GPU Memory Total") ?? vramTotal;
                     break;
 
                 case HardwareType.Memory:
-                    // LHM expose « Memory Used » et « Memory Available » en Go.
-                    // Recherche stricte : sans repli, un capteur manquant donnerait
-                    // un total égal à deux fois l'utilisé.
-                    var used = FindExact(hardware, SensorType.Data, "used");
-                    var available = FindExact(hardware, SensorType.Data, "available");
+                    // Deux blocs [Memory] coexistent : « Total Memory » et « Virtual
+                    // Memory ». Sans ce filtre, le second écrase le premier et on
+                    // affiche le fichier d'échange à la place de la RAM.
+                    if (!hardware.Name.Contains("Virtual", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Ces capteurs sont en Go.
+                        var used = Pick(hardware, SensorType.Data, "Memory Used");
+                        var available = Pick(hardware, SensorType.Data, "Memory Available");
 
-                    ramUsed = used * 1024 ?? ramUsed;
-                    ramTotal = (used + available) * 1024 ?? ramTotal;
+                        ramUsedMb = used * 1024 ?? ramUsedMb;
+                        ramTotalMb = (used + available) * 1024 ?? ramTotalMb;
+                    }
+
                     break;
             }
         }
 
-        return new Telemetry(cpuUsage, cpuTemp, gpuUsage, gpuTemp, vramUsed, vramTotal, ramUsed, ramTotal);
+        WarnOnceIfNoTemperature(cpuTemp);
+
+        return new Telemetry(
+            cpuUsage, cpuTemp, gpuUsage, gpuTemp, vramUsed, vramTotal, ramUsedMb, ramTotalMb);
     }
 
     /// <summary>
-    /// Capteur du type demandé dont le nom contient l'indice, sans repli.
-    /// Renvoie <c>null</c> plutôt qu'une valeur approchée.
+    /// Premier capteur dont le nom correspond exactement à l'un des candidats, dans
+    /// l'ordre donné. Renvoie <c>null</c> si aucun ne correspond ou si le capteur
+    /// trouvé n'a pas de valeur : mieux vaut « — » à l'écran qu'un chiffre faux.
     /// </summary>
-    private static double? FindExact(IHardware hardware, SensorType type, string hint) =>
-        hardware.Sensors
-            .FirstOrDefault(s => s.SensorType == type &&
-                                 s.Name.Contains(hint, StringComparison.OrdinalIgnoreCase))
-            ?.Value;
+    private static double? Pick(IHardware hardware, SensorType type, params string[] names)
+    {
+        foreach (var name in names)
+        {
+            var sensor = hardware.Sensors.FirstOrDefault(
+                s => s.SensorType == type && s.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
 
-    /// <summary>Premier capteur du type demandé, quel que soit son nom.</summary>
-    private static double? FindFirst(IHardware hardware, SensorType type) =>
-        hardware.Sensors.FirstOrDefault(s => s.SensorType == type)?.Value;
+            if (sensor?.Value is { } value)
+            {
+                return value;
+            }
+        }
+
+        return null;
+    }
 
     /// <summary>
-    /// Capteur du type demandé dont le nom contient un indice. L'indice est un filet,
-    /// pas une clé : si rien ne correspond, on retombe sur le premier capteur du type.
+    /// Les capteurs de température existent mais valent <c>null</c> quand le processus
+    /// n'est pas élevé. C'est la cause la plus fréquente, et la moins évidente.
     /// </summary>
-    private static double? FindValue(IHardware hardware, SensorType type, string hint)
+    private void WarnOnceIfNoTemperature(double? cpuTemp)
     {
-        var sensors = hardware.Sensors.Where(s => s.SensorType == type).ToList();
+        if (cpuTemp is not null || _warnedAboutTemperatures)
+        {
+            return;
+        }
 
-        var match = sensors.FirstOrDefault(
-            s => s.Name.Contains(hint, StringComparison.OrdinalIgnoreCase));
-
-        return match?.Value ?? sensors.FirstOrDefault()?.Value;
+        _warnedAboutTemperatures = true;
+        logger.LogWarning(
+            "Aucune température CPU lisible. L'agent tourne-t-il en administrateur " +
+            "(ou en service, compte SYSTEM) ? Lancer « --sensors » pour diagnostiquer.");
     }
 
     public void Dispose()

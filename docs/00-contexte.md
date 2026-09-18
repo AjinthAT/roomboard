@@ -7,7 +7,7 @@
 | iPad 5e gén. (2017) | A9, 2 Go RAM, iPadOS 16 max, Safari 16 | Panneau de contrôle permanent |
 | Mac Pro | Hyperviseur Proxmox | Hôte |
 | VM Debian | Sur Proxmox, allumée H24 | Héberge RoomOS Core |
-| PC Windows 11 | PC gaming | Cible pilotée + hôte de l'agent |
+| PC Windows 11 | ASUS PRIME Z690-A, i7-12700K (8 P-cores + 4 E-cores), 64 Go, RTX 5070 Ti 16 Go | Cible pilotée + hôte de l'agent |
 | JBL USB | Sortie audio | Sortie audio 1 |
 | Casque + dongle USB | Sortie audio | Sortie audio 2 |
 | Lampes | **Non achetées** — doivent être Zigbee | Éclairage |
@@ -25,6 +25,24 @@
 - **A9 + 2 Go de RAM.** C'est le vrai budget de performance du projet, pas le serveur.
 - **Achat de lampes contraint : Zigbee, pas Matter/Thread.** Voir `12-decisions.md`.
   Prévoir un coordinateur Zigbee (Sonoff dongle-E ou SLZB-06 en Ethernet) en plus des ampoules.
+
+## Capteurs du PC — relevé du 2026-09-18
+
+Relevé avec `RoomOS.Agent.Windows.exe --sensors`. Les noms exacts comptent : la
+sélection des capteurs se fait par nom, pas par « premier du bon type ».
+
+| Mesure | Capteur retenu | Piège écarté |
+|---|---|---|
+| Charge CPU | `CPU Total` | les 20 capteurs `CPU Core #n Thread #m` |
+| Température CPU | `CPU Package` | les `… Distance to TjMax`, qui sont des écarts |
+| Charge GPU | `GPU Core` | les nombreux `D3D …` |
+| Température GPU | `GPU Core` | `GPU Memory Junction`, 10 °C plus haut |
+| VRAM | `GPU Memory Used` / `GPU Memory Total` | `D3D Dedicated Memory Used` |
+| RAM | bloc `Total Memory` | le bloc `Virtual Memory`, qui coexiste |
+
+**Les températures exigent l'élévation.** Sans elle, les capteurs sont présents mais
+valent `null` ; le GPU, lui, remonte sa température sans privilège via l'API NVIDIA.
+En service Windows (compte SYSTEM) la question ne se pose pas.
 
 ## Réseau
 

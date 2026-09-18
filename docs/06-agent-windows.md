@@ -72,6 +72,17 @@ problème se confirme, le contournement est de relancer la lecture après la bas
 
 `AgentToken` doit être identique à `ROOMOS__AgentToken` dans `deploy/.env` côté Core.
 
+## Mode diagnostic
+
+```
+.\RoomOS.Agent.Windows.exe --sensors
+```
+
+Liste tout le matériel et tous les capteurs détectés, avec leur nom exact et leur
+valeur, et indique si le processus est élevé. À lancer avant toute chose quand une
+valeur manque : c'est plus rapide que de deviner les noms de capteurs, et les noms
+changent d'une version de pilote à l'autre.
+
 ## Installation (procédure M1)
 
 Sur la VM, publier l'agent :
