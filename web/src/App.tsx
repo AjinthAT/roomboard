@@ -18,19 +18,17 @@ export function App() {
     setPhase('need-token');
   }, []);
 
+  // Chargement : snapshot complet avant toute chose.
   useEffect(() => {
     if (phase !== 'loading') {
       return;
     }
 
     const controller = new AbortController();
-    let hub: { stop: () => void } | null = null;
 
-    // Snapshot complet d'abord, puis seulement les deltas par le hub.
     getState(controller.signal)
       .then((snapshot) => {
         roomStore.loadSnapshot(snapshot);
-        hub = connectRoomHub();
         setPhase('ready');
       })
       .catch((cause: unknown) => {
@@ -45,11 +43,24 @@ export function App() {
         setPhase('error');
       });
 
-    return () => {
-      controller.abort();
-      hub?.stop();
-    };
+    return () => controller.abort();
   }, [phase, forgetToken]);
+
+  // Hub : vivant tant qu'on est en phase « ready », et pas une milliseconde de moins.
+  //
+  // Ouvrir la connexion dans l'effet de chargement était un piège : cet effet dépend
+  // de `phase`, qu'il modifie lui-même en passant à « ready ». Le nettoyage refermait
+  // donc aussitôt la connexion qu'il venait d'ouvrir, et la nouvelle exécution sortait
+  // sans la rouvrir. Le panneau restait sur le dernier snapshot, figé, sans jamais
+  // recevoir un seul delta.
+  useEffect(() => {
+    if (phase !== 'ready') {
+      return;
+    }
+
+    const hub = connectRoomHub();
+    return () => hub.stop();
+  }, [phase]);
 
   if (phase === 'need-token') {
     return (
@@ -114,7 +125,10 @@ function ConnectionBanner() {
     return null;
   }
 
-  const message = connection === 'offline' ? 'Connexion perdue' : 'Reconnexion…';
+  const message =
+    connection === 'connecting' ? 'Connexion…'
+    : connection === 'reconnecting' ? 'Reconnexion…'
+    : 'Connexion perdue';
 
   return (
     <p className="rounded-lg border border-amber-900/50 bg-amber-950/30 px-4 py-2 text-sm text-amber-200/80">

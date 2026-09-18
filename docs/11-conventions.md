@@ -11,10 +11,13 @@ roomboard/
 │   ├── RoomOS.Domain/          # entités, DTOs, contrats. Zéro dépendance externe.
 │   ├── RoomOS.Core/            # ASP.NET Core : API, hubs, moteur, intégrations
 │   │   ├── Api/                # endpoints minimal API, groupés par domaine
+│   │   ├── Agents/             # registre des connexions agent
+│   │   ├── Auth/               # authentification par jeton
+│   │   ├── Configuration/      # options liées aux variables ROOMOS__
 │   │   ├── Hubs/
 │   │   ├── Data/               # DbContext, migrations, seed
 │   │   ├── State/              # StateStore
-│   │   ├── Scenes/             # moteur + exécuteurs
+│   │   ├── Scenes/             # moteur + exécuteurs (M5)
 │   │   └── Integrations/       # Spotify, Mqtt, Wol
 │   └── RoomOS.Agent.Windows/
 ├── web/                   # Vite + React + TS

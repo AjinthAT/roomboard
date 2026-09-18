@@ -9,4 +9,17 @@ namespace RoomOS.Core.Hubs;
 /// il passe par REST (docs/05-api.md).
 /// </summary>
 [Authorize(Policy = TokenAuthenticationHandler.ClientPolicy)]
-public sealed class RoomHub : Hub;
+public sealed class RoomHub(ILogger<RoomHub> logger) : Hub
+{
+    public override Task OnConnectedAsync()
+    {
+        logger.LogInformation("Client {ConnectionId} connecté.", Context.ConnectionId);
+        return base.OnConnectedAsync();
+    }
+
+    public override Task OnDisconnectedAsync(Exception? exception)
+    {
+        logger.LogInformation("Client {ConnectionId} déconnecté.", Context.ConnectionId);
+        return base.OnDisconnectedAsync(exception);
+    }
+}

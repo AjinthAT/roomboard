@@ -1,5 +1,5 @@
 import { readToken } from './token';
-import type { HealthResponse, StateSnapshot } from './types';
+import type { StateSnapshot } from './types';
 
 /**
  * Le front n'appelle que le Core, sur la même origine : pas de base URL,
@@ -37,10 +37,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return (await response.json()) as T;
-}
-
-export function getHealth(signal?: AbortSignal): Promise<HealthResponse> {
-  return request<HealthResponse>('/healthz', { signal });
 }
 
 export function getState(signal?: AbortSignal): Promise<StateSnapshot> {

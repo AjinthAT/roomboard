@@ -3,12 +3,6 @@
  * Voir docs/11-conventions.md.
  */
 
-export type HealthResponse = {
-  status: string;
-  version: string;
-  serverTime: string;
-};
-
 export type Telemetry = {
   cpuUsage: number;
   cpuTempC: number | null;

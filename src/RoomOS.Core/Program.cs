@@ -77,7 +77,14 @@ app.MapPcEndpoints();
 app.MapHub<RoomHub>("/hub/room");
 app.MapHub<AgentHub>("/hub/agent");
 
-// Toute route inconnue rend la PWA : une seule page, pas de router serveur.
+// Les routes inconnues sous /api et /hub répondent 404. Sans ça, le fallback SPA
+// ci-dessous leur sert index.html en 200, et une faute de frappe côté client devient
+// une erreur de parsing JSON au lieu d'un statut clair. Ces motifs attrape-tout ont
+// une précédence plus faible que les routes déclarées : ils ne les masquent pas.
+app.Map("/api/{**rest}", () => Results.NotFound());
+app.Map("/hub/{**rest}", () => Results.NotFound());
+
+// Toute autre route inconnue rend la PWA : une seule page, pas de router serveur.
 app.MapFallbackToFile("index.html");
 
 app.Run();
