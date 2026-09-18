@@ -4,6 +4,10 @@
 
 ### Contraintes plateforme (état septembre 2026)
 
+> **Web API uniquement** à la création de l'application. Pas de Web Playback SDK :
+> il sert à faire du navigateur un lecteur, alors que RoomOS pilote le client Spotify
+> déjà installé sur le PC.
+
 Spotify a durci l'accès développeur en février 2026. À connaître **avant** de coder :
 
 - Le Development Mode exige un **compte Spotify Premium**.
@@ -43,8 +47,15 @@ invitation à ajouter Plex.
 
 ### Implémentation
 
-- Flux **Authorization Code + PKCE**, une fois, depuis un navigateur sur le LAN.
-  Redirect URI : `http://127.0.0.1:8888/callback` en local ou une route du Core.
+- Flux **Authorization Code + PKCE**, une fois, depuis un navigateur.
+- **Redirect URI : `http://127.0.0.1:8080/api/music/callback`**, et rien d'autre.
+  Spotify impose HTTPS pour toute adresse non-loopback depuis 2025. Une route directe
+  du Core en `http://192.168.1.30:8080/...` est **refusée**, et `localhost` l'est aussi :
+  seule l'IP de bouclage littérale est acceptée en HTTP.
+- Conséquence pratique : le Core n'ayant pas de navigateur, l'autorisation se fait
+  depuis le PC à travers un tunnel SSH — `ssh -L 8080:127.0.0.1:8080 ajin@192.168.1.30`
+  — de sorte que `127.0.0.1:8080` dans le navigateur atteigne bien le Core. Une seule
+  fois, à la mise en service.
 - Scopes : `user-read-playback-state`, `user-modify-playback-state`,
   `user-read-currently-playing`.
 - `refresh_token` stocké dans `integration_tokens`. Refresh automatique côté Core,
