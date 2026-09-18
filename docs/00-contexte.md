@@ -1,0 +1,53 @@
+# 00 — Contexte matériel et réseau
+
+## Matériel existant
+
+| Élément | Détail | Rôle dans RoomOS |
+|---|---|---|
+| iPad 5e gén. (2017) | A9, 2 Go RAM, iPadOS 16 max, Safari 16 | Panneau de contrôle permanent |
+| Mac Pro | Hyperviseur Proxmox | Hôte |
+| VM Debian | Sur Proxmox, allumée H24 | Héberge RoomOS Core |
+| PC Windows 11 | PC gaming | Cible pilotée + hôte de l'agent |
+| JBL USB | Sortie audio | Sortie audio 1 |
+| Casque + dongle USB | Sortie audio | Sortie audio 2 |
+| Lampes | **Non achetées** — doivent être Zigbee | Éclairage |
+| Mac | Disponible | Dev uniquement, pas de rôle runtime |
+
+## Contraintes dures
+
+- **L'iPad 5 est en fin de vie logicielle.** Il ne doit jamais être un composant
+  dont dépend l'architecture. Il est un client parmi d'autres.
+- **Safari 16 est la cible front.** Pas de fonctionnalité JS/CSS plus récente sans polyfill vérifié.
+- **iPadOS 16.7.16 confirmé** sur l'appareil, soit Safari 16.6. Tailwind 4 exige
+  Safari 16.4+ (`@property`, `color-mix()`, cascade layers) : le seuil est franchi,
+  **Tailwind 4 est validé**, pas de repli en 3.4. Toute nouvelle dépendance front
+  doit être vérifiée contre Safari 16.6, pas contre « le dernier Safari ».
+- **A9 + 2 Go de RAM.** C'est le vrai budget de performance du projet, pas le serveur.
+- **Achat de lampes contraint : Zigbee, pas Matter/Thread.** Voir `12-decisions.md`.
+  Prévoir un coordinateur Zigbee (Sonoff dongle-E ou SLZB-06 en Ethernet) en plus des ampoules.
+
+## Réseau
+
+- Tout se passe en LAN, en HTTP, sur le réseau domestique. Pas d'exposition Internet en V1.
+- Le PC Windows doit être sur le même segment L2 que le Core pour le Wake-on-LAN
+  (paquet magique en broadcast). WoL à activer dans le BIOS **et** dans les propriétés
+  de la carte réseau Windows (« Autoriser ce périphérique à sortir l'ordinateur de veille »
+  + « Magic Packet only »).
+- L'agent Windows se connecte **en sortant** vers le Core. Aucune règle de pare-feu
+  entrante n'est nécessaire sur le PC.
+
+## Adressage à figer avant M1
+
+| Nom | Valeur | Note |
+|---|---|---|
+| `CORE_HOST` | **`192.168.1.30`** | Confirmé : VM `vm-102`, interface `ens18`. Réservation DHCP à poser. |
+| `CORE_PORT` | `8080` | HTTP |
+| `PC_MAC` | **à relever** | Pour le WoL. `getmac /v` sur le PC, carte Ethernet uniquement. |
+| `PC_IP` | **à relever** | Réservation DHCP obligatoire |
+| `BROADCAST` | `192.168.1.255` | Cible du paquet magique |
+
+> Le Core tourne sur la machine où l'on développe : **dev et prod sont la même VM**.
+> L'iPad peut donc charger `http://192.168.1.30:8080` dès M0, sans étape de déploiement.
+>
+> `PC_MAC` et `PC_IP` sont les deux seules valeurs manquantes. Elles bloquent M1
+> (Wake-on-LAN), pas M0.

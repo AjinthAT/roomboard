@@ -1,0 +1,76 @@
+# 06 — Agent Windows
+
+## Nature
+
+Worker Service .NET 10, installé en service Windows, démarrage automatique,
+**exécuté en compte SYSTEM ou administrateur** (obligatoire pour lire les températures).
+
+```
+RoomOS.Agent.Windows.exe
+```
+
+Installation : `sc.exe create RoomOSAgent binPath= "..." start= auto`
+ou `dotnet publish -r win-x64 --self-contained` puis `New-Service` en PowerShell.
+
+## Responsabilités
+
+1. Maintenir une connexion SignalR sortante vers le Core (reconnexion automatique
+   avec backoff exponentiel plafonné à 30 s).
+2. Publier la télémétrie toutes les 2 s.
+3. Publier l'état audio à chaque changement + toutes les 10 s en filet.
+4. Exécuter les commandes reçues et acquitter.
+
+## Télémétrie
+
+`LibreHardwareMonitorLib`, avec `Computer { IsCpuEnabled, IsGpuEnabled, IsMemoryEnabled = true }`.
+
+**Risque bloquant à lever en tout premier dans M1** : LibreHardwareMonitor charge un
+driver noyau pour lire les capteurs. Sur Windows 11 avec l'**intégrité de la mémoire**
+(Sécurité Windows → Sécurité de l'appareil → Isolation du noyau) activée, ce chargement
+peut être refusé. C'est le seul point de M1 qui peut échouer pour une raison hors du
+code. À tester avant d'écrire quoi que ce soit d'autre dans l'agent : si ça bloque, le
+choix est entre désactiver l'isolation du noyau sur le PC, ou renoncer aux températures
+et se contenter des pourcentages d'usage — que l'API Windows expose sans driver.
+
+Points d'attention connus :
+- Il faut appeler `hardware.Update()` avant chaque lecture, sinon les valeurs sont figées.
+- Les capteurs GPU changent de nom entre pilotes NVIDIA. Ne jamais matcher sur le nom exact :
+  chercher le premier `SensorType.Temperature` du hardware de type `GpuNvidia`/`GpuAmd`.
+- **Prévoir que ça casse à chaque mise à jour majeure de pilote GPU.** Toute valeur
+  de température est nullable de bout en bout, jusqu'à l'UI.
+- Si aucun capteur n'est trouvé, l'agent publie quand même usage/RAM. Il ne plante pas.
+
+## Audio
+
+`NAudio` / `MMDeviceEnumerator` pour énumérer les sorties.
+
+Le changement de périphérique par défaut n'est pas exposé par une API publique Windows.
+Deux options, à trancher en M2 :
+- **`AudioSwitcher.AudioApi.CoreAudio`** (NuGet) : expose `SetDefaultDevice`, s'appuie sur
+  l'interface COM non documentée `IPolicyConfig`. C'est la voie courante.
+- Appeler `IPolicyConfig` directement via P/Invoke. Plus de contrôle, plus de code.
+
+Commencer par `AudioSwitcher`. Si ça échoue sur Windows 11 récent, basculer sur le P/Invoke.
+
+Changer la sortie par défaut ne bascule pas toujours les applications déjà en cours
+(Spotify notamment garde parfois son endpoint). Comportement à constater en M2 ; si le
+problème se confirme, le contournement est de relancer la lecture après la bascule.
+
+## Power
+
+- `Shutdown` → `shutdown /s /t 0`
+- `Restart` → `shutdown /r /t 0`
+- L'agent acquitte **avant** d'exécuter, sinon l'ack ne part jamais.
+
+## Configuration
+
+`appsettings.json` à côté de l'exe :
+```json
+{ "Core": { "Url": "http://192.168.1.20:8080", "AgentToken": "...", "PcId": "gaming-pc" },
+  "Telemetry": { "IntervalMs": 2000 } }
+```
+
+## Ce que l'agent ne fait pas
+
+Pas de Wake-on-LAN (le PC est éteint), pas d'accès à Spotify, pas de logique métier,
+pas de décision. L'agent est un exécutant. Toute la logique est dans le Core.

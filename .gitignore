@@ -1,0 +1,28 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+artifacts/
+
+# Front
+node_modules/
+dist/
+web/.vite/
+
+# Sortie de build du front copiée dans le Core
+src/RoomOS.Core/wwwroot/
+
+# Données runtime
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets et environnement
+.env
+!deploy/.env.example
+
+# Éditeurs / OS
+.vscode/
+.idea/
+.DS_Store
