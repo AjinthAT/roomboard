@@ -50,6 +50,25 @@ Sans ces deux conditions, les capteurs de température CPU existent mais valent 
 sans la moindre erreur. Le GPU, lui, remonte tout via l'API NVIDIA sans privilège
 particulier — d'où un diagnostic trompeur si on ne regarde que lui.
 
+## Sorties audio du PC — relevé du 2026-09-18
+
+Relevé avec `RoomOS.Agent.Windows.exe --audio`.
+
+| Périphérique Windows | Rôle | Indice retenu |
+|---|---|---|
+| `Haut-parleurs (JBL Charge 6)` | sortie 1 | `JBL` |
+| `Casque pour téléphone (CORSAIR HS80 MAX WIRELESS Gaming Headset)` | sortie 2 | `CORSAIR` |
+| `Odyssey G65B (NVIDIA High Definition Audio)` | écran, non piloté | — |
+| `Realtek Digital Output (Realtek(R) Audio)` | non utilisé | — |
+
+**L'indice vise le matériel, pas le rôle.** « Casque » correspondrait à « Casque pour
+téléphone », qui est le canal *communications* du Corsair : bande étroite, prévu pour
+la voix. Y router la musique donnerait un son dégradé sans que rien ne signale d'erreur.
+
+L'écran et la sortie Realtek restent visibles de Windows mais hors du registre RoomOS :
+si l'une devient la sortie active, `activeOutputId` vaut `null` et l'UI affiche
+« sortie inconnue » — c'est le comportement voulu, pas une panne.
+
 ## Réseau
 
 - Tout se passe en LAN, en HTTP, sur le réseau domestique. Pas d'exposition Internet en V1.

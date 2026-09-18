@@ -19,14 +19,15 @@ public sealed class RoomOsOptions
     public PcOptions Pc { get; set; } = new();
 
     /// <summary>
-    /// Sorties audio du PC. Les indices Windows n'étant connus qu'après énumération
-    /// par l'agent, seul l'indice de correspondance est configuré ici.
+    /// Sorties audio du PC. Les identifiants Windows n'étant connus qu'après
+    /// énumération par l'agent, seul l'indice de correspondance est configuré ici.
     /// </summary>
-    public List<AudioOutputOptions> AudioOutputs { get; set; } =
-    [
-        new() { Id = "jbl", Name = "JBL", MatchHint = "JBL" },
-        new() { Id = "headset", Name = "Casque", MatchHint = "Casque" },
-    ];
+    /// <remarks>
+    /// Liste vide par défaut, à dessein : le binder de configuration .NET <em>ajoute</em>
+    /// aux collections existantes au lieu de les remplacer. Des valeurs par défaut ici
+    /// se cumuleraient avec celles de l'environnement. Le repli est dans le seeder.
+    /// </remarks>
+    public List<AudioOutputOptions> AudioOutputs { get; set; } = [];
 }
 
 public sealed class AudioOutputOptions
