@@ -1,0 +1,32 @@
+# RoomOS — configuration Zigbee2MQTT.
+#
+# L'appairage se fait par l'interface web de Z2M (http://127.0.0.1:8099 depuis la
+# VM), pas par RoomOS : RoomOS consomme le réseau Zigbee, il ne l'administre pas.
+# Voir docs/09-integrations.md.
+
+version: 4
+
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://mosquitto:1883
+
+serial:
+  # SLZB-06 en Ethernet : adaptateur réseau, pas de port série à passer à la VM.
+  # Remplacer par l'IP réelle du coordinateur une fois branché.
+  port: tcp://192.168.1.XX:6638
+  adapter: zstack
+
+frontend:
+  enabled: true
+  port: 8080
+
+homeassistant:
+  enabled: false
+
+advanced:
+  log_level: info
+  # Laisser à false hors appairage : un réseau ouvert en permanence accepte
+  # n'importe quel appareil à portée.
+  channel: 11
+
+permit_join: false

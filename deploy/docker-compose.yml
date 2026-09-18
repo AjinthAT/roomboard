@@ -1,5 +1,5 @@
-# RoomOS — M0/M1 : le Core seul.
-# Mosquitto et Zigbee2MQTT arrivent en M4, Prometheus et Grafana en M6.
+# RoomOS — M0 à M4.
+# Prometheus et Grafana arrivent en M6.
 services:
   core:
     build:
@@ -14,6 +14,9 @@ services:
     # sur le lien local du conteneur et Linux ne relaie pas les broadcasts dirigés :
     # le paquet magique n'atteint jamais le LAN. Vérifié à la capture : zéro paquet
     # sur ens18 en mode bridge. Voir docs/03-architecture.md.
+    #
+    # Conséquence : le Core ne résout pas les noms de services Docker. Il joint
+    # Mosquitto par 127.0.0.1, d'où la publication du port ci-dessous.
     network_mode: host
 
     environment:
@@ -22,6 +25,37 @@ services:
       - .env
     volumes:
       - roomos-data:/data
+    depends_on:
+      - mosquitto
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: roomos-mosquitto
+    restart: unless-stopped
+    # Publié sur la boucle locale uniquement : le Core y accède depuis l'hôte,
+    # Zigbee2MQTT depuis le réseau interne, et personne depuis le LAN.
+    ports:
+      - "127.0.0.1:1883:1883"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config:ro
+      - mosquitto-data:/mosquitto/data
+
+  # Démarré uniquement quand le coordinateur Zigbee est branché :
+  #   docker compose --profile zigbee up -d
+  # Sans coordinateur joignable, Zigbee2MQTT redémarre en boucle.
+  zigbee2mqtt:
+    image: ghcr.io/koenkk/zigbee2mqtt:latest
+    container_name: roomos-zigbee2mqtt
+    restart: unless-stopped
+    profiles: [zigbee]
+    ports:
+      - "127.0.0.1:8099:8080"
+    volumes:
+      - ./zigbee2mqtt:/app/data
+      - /run/udev:/run/udev:ro
+    depends_on:
+      - mosquitto
 
 volumes:
   roomos-data:
+  mosquitto-data:
