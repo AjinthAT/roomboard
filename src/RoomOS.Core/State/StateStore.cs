@@ -10,14 +10,17 @@ namespace RoomOS.Core.State;
 public sealed class StateStore
 {
     private readonly ConcurrentDictionary<string, PcState> _pcs = new();
+    private readonly ConcurrentDictionary<string, AudioState> _audio = new();
     private readonly TimeProvider _time;
 
     public StateStore(TimeProvider time) => _time = time;
 
     public event Action<PcStateChanged>? PcStateChanged;
     public event Action<TelemetryUpdated>? TelemetryUpdated;
+    public event Action<AudioStateChanged>? AudioStateChanged;
 
     public IReadOnlyDictionary<string, PcState> Pcs => _pcs;
+    public IReadOnlyDictionary<string, AudioState> Audio => _audio;
 
     public PcState GetPc(string pcId) =>
         _pcs.TryGetValue(pcId, out var state) ? state : PcState.Offline(_time.GetUtcNow());
@@ -37,7 +40,32 @@ public sealed class StateStore
     public void SetOffline(string pcId)
     {
         _pcs[pcId] = PcState.Offline(_time.GetUtcNow());
+
+        // L'état audio d'un PC éteint n'a pas de sens : on ne le garde pas plus que
+        // sa télémétrie. Les sorties restent listées, mais aucune n'est active.
+        if (_audio.TryGetValue(pcId, out var audio))
+        {
+            var cleared = audio with
+            {
+                ActiveOutputId = null,
+                Outputs = [.. audio.Outputs.Select(o => o with { Connected = false })],
+            };
+            _audio[pcId] = cleared;
+            AudioStateChanged?.Invoke(new AudioStateChanged(
+                pcId, null, cleared.Volume, cleared.Muted, cleared.Outputs));
+        }
+
         PcStateChanged?.Invoke(new PcStateChanged(pcId, false, null));
+    }
+
+    public AudioState? GetAudio(string pcId) =>
+        _audio.TryGetValue(pcId, out var state) ? state : null;
+
+    public void SetAudio(string pcId, AudioState state)
+    {
+        _audio[pcId] = state;
+        AudioStateChanged?.Invoke(
+            new AudioStateChanged(pcId, state.ActiveOutputId, state.Volume, state.Muted, state.Outputs));
     }
 
     public void SetTelemetry(string pcId, Telemetry telemetry)

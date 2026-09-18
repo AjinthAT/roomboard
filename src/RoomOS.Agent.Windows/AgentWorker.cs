@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Reflection;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Options;
+using RoomOS.Agent.Windows.Audio;
 using RoomOS.Domain.Contracts;
 
 namespace RoomOS.Agent.Windows;
@@ -14,10 +15,18 @@ public sealed class AgentWorker(
     IOptions<AgentOptions> agentOptions,
     IOptions<TelemetryOptions> telemetryOptions,
     TelemetryReader telemetry,
+    AudioController audio,
     ILogger<AgentWorker> logger) : BackgroundService
 {
+    /// <summary>Filet : republier l'état audio même sans changement, au cas où un
+    /// message se serait perdu.</summary>
+    private static readonly TimeSpan AudioHeartbeat = TimeSpan.FromSeconds(10);
+
     private readonly AgentOptions _options = agentOptions.Value;
     private readonly TimeSpan _interval = TimeSpan.FromMilliseconds(telemetryOptions.Value.IntervalMs);
+
+    private AgentAudioState? _lastAudio;
+    private DateTimeOffset _lastAudioPush = DateTimeOffset.MinValue;
 
     private static string Version =>
         Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
@@ -39,6 +48,18 @@ public sealed class AgentWorker(
 
         connection.On<AgentCommand>(AgentProtocol.ToAgent.Restart,
             command => ExecutePowerCommandAsync(connection, command, "/r"));
+
+        connection.On<SetAudioOutputCommand>(AgentProtocol.ToAgent.SetAudioOutput,
+            command => AcknowledgeAsync(
+                connection, command.CommandId, audio.TrySetOutput(command.WindowsDeviceId)));
+
+        connection.On<SetVolumeCommand>(AgentProtocol.ToAgent.SetVolume,
+            command => AcknowledgeAsync(
+                connection, command.CommandId, audio.TrySetVolume(command.Level)));
+
+        connection.On<SetMuteCommand>(AgentProtocol.ToAgent.SetMute,
+            command => AcknowledgeAsync(
+                connection, command.CommandId, audio.TrySetMute(command.Muted)));
 
         connection.Reconnected += async _ =>
         {
@@ -116,11 +137,58 @@ public sealed class AgentWorker(
             {
                 await connection.InvokeAsync(
                     AgentProtocol.ToCore.PushTelemetry, telemetry.Read(), ct);
+
+                await PublishAudioIfNeededAsync(connection, ct);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                logger.LogWarning(ex, "Échec de publication de la télémétrie.");
+                logger.LogWarning(ex, "Échec de publication de l'état.");
             }
+        }
+    }
+
+    /// <summary>
+    /// Publie l'état audio à chaque changement, et au minimum toutes les 10 s.
+    /// Le volume bouge souvent par les touches du clavier : republier tout à chaque
+    /// tick saturerait le hub pour rien.
+    /// </summary>
+    private async Task PublishAudioIfNeededAsync(HubConnection connection, CancellationToken ct)
+    {
+        var current = audio.Read();
+        var stale = DateTimeOffset.UtcNow - _lastAudioPush >= AudioHeartbeat;
+
+        if (!stale && current == _lastAudio)
+        {
+            return;
+        }
+
+        await connection.InvokeAsync(AgentProtocol.ToCore.PushAudioState, current, ct);
+        _lastAudio = current;
+        _lastAudioPush = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
+    /// Acquitte une commande audio. Contrairement aux commandes d'extinction, on
+    /// acquitte <em>après</em> exécution : le processus survit, et le résultat est
+    /// l'information utile.
+    /// </summary>
+    private async Task AcknowledgeAsync(HubConnection connection, string commandId, bool succeeded)
+    {
+        var status = succeeded ? "done" : "failed";
+
+        try
+        {
+            await connection.InvokeAsync(
+                AgentProtocol.ToCore.Ack, new CommandAck(commandId, status, null));
+
+            // Pousser l'état sans attendre le prochain tick : l'UI n'a pas de mise à
+            // jour optimiste, elle attend le serveur pour se rafraîchir.
+            _lastAudio = null;
+            await PublishAudioIfNeededAsync(connection, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Impossible d'acquitter {CommandId}.", commandId);
         }
     }
 

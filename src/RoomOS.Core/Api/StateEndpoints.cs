@@ -53,6 +53,11 @@ public static class StateEndpoints
                     current.Uptime is { } uptime ? (long)uptime.TotalSeconds : null,
                     current.Telemetry);
             })],
+            pcs.ToDictionary(
+                pc => pc.Id,
+                pc => state.GetAudio(pc.Id) is { } a
+                    ? new AudioSnapshot(a.ActiveOutputId, a.Volume, a.Muted, a.Outputs)
+                    : new AudioSnapshot(null, 0, false, [])),
             time.GetUtcNow());
 
         return Results.Ok(snapshot);

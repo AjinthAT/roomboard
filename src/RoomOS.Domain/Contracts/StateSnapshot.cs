@@ -11,7 +11,15 @@ namespace RoomOS.Domain.Contracts;
 public sealed record StateSnapshot(
     RoomInfo Room,
     IReadOnlyList<PcSnapshot> Pcs,
+    IReadOnlyDictionary<string, AudioSnapshot> Audio,
     DateTimeOffset ServerTime);
+
+/// <summary>État audio d'un PC, indexé par son identifiant dans le snapshot.</summary>
+public sealed record AudioSnapshot(
+    string? ActiveOutputId,
+    int Volume,
+    bool Muted,
+    IReadOnlyList<AudioOutputInfo> Outputs);
 
 public sealed record RoomInfo(string Id, string Name);
 

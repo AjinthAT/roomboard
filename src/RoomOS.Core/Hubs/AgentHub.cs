@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using RoomOS.Core.Agents;
+using RoomOS.Core.Audio;
 using RoomOS.Core.Auth;
 using RoomOS.Core.Data;
 using RoomOS.Core.Data.Entities;
@@ -20,6 +21,8 @@ public sealed class AgentHub(
     AgentRegistry registry,
     StateStore state,
     RoomOsDbContext db,
+    AudioOutputResolver audio,
+    TimeProvider time,
     ILogger<AgentHub> logger) : Hub
 {
     /// <summary>
@@ -60,6 +63,23 @@ public sealed class AgentHub(
 
         state.SetTelemetry(pcId, telemetry);
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// État audio poussé par l'agent, à chaque changement et en filet toutes les 10 s.
+    /// Comme pour la télémétrie, le PC vient de la connexion, pas de la charge utile.
+    /// </summary>
+    public async Task PushAudioState(AgentAudioState reported)
+    {
+        var pcId = registry.GetPc(Context.ConnectionId);
+
+        if (pcId is null)
+        {
+            throw new HubException("Register doit précéder PushAudioState.");
+        }
+
+        var resolved = await audio.ResolveAsync(pcId, reported, time.GetUtcNow(), Context.ConnectionAborted);
+        state.SetAudio(pcId, resolved);
     }
 
     public Task Ack(CommandAck ack)

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using RoomOS.Core.Agents;
 using RoomOS.Core.Api;
+using RoomOS.Core.Audio;
 using RoomOS.Core.Auth;
 using RoomOS.Core.Configuration;
 using RoomOS.Core.Data;
@@ -31,6 +32,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<StateStore>();
 builder.Services.AddSingleton<AgentRegistry>();
 builder.Services.AddSingleton<WakeOnLanSender>();
+builder.Services.AddScoped<AudioOutputResolver>();
 builder.Services.AddHostedService<RoomBroadcaster>();
 
 builder.Services.AddSignalR();
@@ -73,6 +75,7 @@ app.MapGet("/healthz", () => new HealthResponse("ok", version, DateTimeOffset.Ut
 
 app.MapStateEndpoints();
 app.MapPcEndpoints();
+app.MapAudioEndpoints();
 
 app.MapHub<RoomHub>("/hub/room");
 app.MapHub<AgentHub>("/hub/agent");

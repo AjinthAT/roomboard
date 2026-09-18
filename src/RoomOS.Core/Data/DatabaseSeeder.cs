@@ -50,6 +50,46 @@ public static class DatabaseSeeder
             pc.Name = options.Pc.Name;
         }
 
+        await SeedAudioOutputsAsync(db, options, ct);
+
         await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// Crée les sorties déclarées en configuration. <c>windows_device_id</c> reste vide :
+    /// il est renseigné à la première énumération de l'agent, par correspondance sur
+    /// <c>match_hint</c>, puis persisté.
+    /// </summary>
+    private static async Task SeedAudioOutputsAsync(
+        RoomOsDbContext db, RoomOsOptions options, CancellationToken ct)
+    {
+        var existing = await db.AudioOutputs
+            .Where(o => o.PcDeviceId == options.Pc.Id)
+            .ToListAsync(ct);
+
+        for (var i = 0; i < options.AudioOutputs.Count; i++)
+        {
+            var configured = options.AudioOutputs[i];
+            var row = existing.FirstOrDefault(o => o.Id == configured.Id);
+
+            if (row is null)
+            {
+                db.AudioOutputs.Add(new AudioOutput
+                {
+                    Id = configured.Id,
+                    PcDeviceId = options.Pc.Id,
+                    MatchHint = configured.MatchHint,
+                    FriendlyName = configured.Name,
+                    SortOrder = i,
+                });
+                continue;
+            }
+
+            // L'indice et le libellé viennent de l'environnement ; l'identifiant Windows
+            // vient de l'agent et ne doit pas être écrasé.
+            row.MatchHint = configured.MatchHint;
+            row.FriendlyName = configured.Name;
+            row.SortOrder = i;
+        }
     }
 }

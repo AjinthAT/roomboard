@@ -7,6 +7,7 @@ public sealed class RoomOsDbContext(DbContextOptions<RoomOsDbContext> options) :
 {
     public DbSet<Room> Rooms => Set<Room>();
     public DbSet<Device> Devices => Set<Device>();
+    public DbSet<AudioOutput> AudioOutputs => Set<AudioOutput>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,6 +35,18 @@ public sealed class RoomOsDbContext(DbContextOptions<RoomOsDbContext> options) :
                 .WithMany(r => r.Devices)
                 .HasForeignKey(d => d.RoomId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AudioOutput>(output =>
+        {
+            output.ToTable("audio_outputs");
+            output.HasKey(o => o.Id);
+            output.Property(o => o.Id).HasColumnName("id");
+            output.Property(o => o.PcDeviceId).HasColumnName("pc_device_id").IsRequired();
+            output.Property(o => o.WindowsDeviceId).HasColumnName("windows_device_id");
+            output.Property(o => o.MatchHint).HasColumnName("match_hint").IsRequired();
+            output.Property(o => o.FriendlyName).HasColumnName("friendly_name").IsRequired();
+            output.Property(o => o.SortOrder).HasColumnName("sort_order");
         });
     }
 }
