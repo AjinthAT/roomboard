@@ -55,7 +55,9 @@ Vérifié le 2026-09-18, côté Core, avec un agent simulé :
 - Base persistée dans le volume Docker, survit à un `compose restart`.
 - Bundle : **87,4 Ko gzip** sur 200 après l'ajout de `@microsoft/signalr`.
 
-Restent à confirmer sur le matériel réel :
+Confirmé sur le matériel réel :
+- [x] **Agent installé en service Windows** (`RoomOSAgent`, démarrage automatique,
+      compte SYSTEM). Connecté au Core, télémétrie continue, aucune fenêtre visible.
 - [x] Agent copié sur le PC, `--sensors` exécuté, matériel relevé
 - [x] Températures **GPU** réelles : `GPU Core` à 40,4 °C
 - [x] Températures **CPU** réelles : `CPU Package` à 51 °C après installation de
@@ -63,7 +65,9 @@ Restent à confirmer sur le matériel réel :
       sécurité. Voir `06-agent-windows.md`.
 - [x] Les quatre corrections de capteurs confirmées sur le matériel : CPU 12,2 % /
       51 °C, GPU 1 % / 41,6 °C, VRAM 2568 sur 16303 Mo, RAM 24,9 sur 63,7 Go.
+Restent à éprouver, en conditions réelles :
 - [ ] Réveil effectif du PC (WoL activé dans le BIOS **et** sur la carte Intel)
+- [ ] Extinction et redémarrage déclenchés depuis l'iPad
 - [ ] Carte PC affichée sur l'iPad
 
 ### Décisions prises pendant M1
