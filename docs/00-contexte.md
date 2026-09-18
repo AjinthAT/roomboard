@@ -10,7 +10,7 @@
 | PC Windows 11 | ASUS PRIME Z690-A, i7-12700K (8 P-cores + 4 E-cores), 64 Go, RTX 5070 Ti 16 Go | Cible pilotée + hôte de l'agent |
 | JBL USB | Sortie audio | Sortie audio 1 |
 | Casque + dongle USB | Sortie audio | Sortie audio 2 |
-| Lampes | **Non achetées** — doivent être Zigbee | Éclairage |
+| Lampes | 3 douilles : 1× E27 et 2× E14. **Commande en cours : coordinateur SLZB-06 + 1 ampoule E27 couleur.** Les E14 plus tard. | Éclairage |
 | Mac | Disponible | Dev uniquement, pas de rôle runtime |
 
 ## Contraintes dures

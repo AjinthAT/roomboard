@@ -137,6 +137,19 @@ l'appareil actif du compte : la scène **Gaming** lancerait donc la musique sur 
 téléphone. À trancher avant M5, voir `09-integrations.md`.
 
 ## M4 — Lumières
+
+> **Matériel commandé : coordinateur SLZB-06 (CC2652P, Ethernet) et une seule
+> ampoule E27 couleur.** Les deux E14 d'ambiance viendront plus tard.
+>
+> Une ampoule suffit à valider toute la chaîne — Mosquitto, Zigbee2MQTT, abonnement,
+> carte Lumières. Les ajouts ultérieurs ne seront qu'un appairage dans Z2M, sans code.
+>
+> **Conséquence pour M5** : les scènes de `08-scenes.md` visent `desk-light` **et**
+> `ambient-light`. Avec une seule ampoule, les étapes d'ambiance échoueraient à chaque
+> exécution. Sans casser la scène — la règle 3 du moteur le prévoit — mais une scène
+> qui rapporte un échec systématique finit par ne plus être lue. Les scènes seront
+> alignées sur le matériel réellement présent au moment de M5.
+
 - [ ] Achat coordinateur + ampoules Zigbee, appairage dans Z2M
 - [ ] Mosquitto + Z2M dans le compose
 - [ ] Souscription MQTT, on/off/luminosité/couleur
