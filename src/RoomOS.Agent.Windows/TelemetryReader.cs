@@ -152,8 +152,10 @@ public sealed class TelemetryReader(ILogger<TelemetryReader> logger) : IDisposab
 
         _warnedAboutTemperatures = true;
         logger.LogWarning(
-            "Aucune température CPU lisible. L'agent tourne-t-il en administrateur " +
-            "(ou en service, compte SYSTEM) ? Lancer « --sensors » pour diagnostiquer.");
+            "Aucune température CPU lisible. Deux causes, dans cet ordre : " +
+            "PawnIO n'est pas installé (https://pawnio.eu — LibreHardwareMonitor ne " +
+            "fournit plus de driver depuis la 0.9.5, il lit les MSR à travers celui-ci) ; " +
+            "ou le processus n'est pas élevé. Lancer « --sensors » pour trancher.");
     }
 
     public void Dispose()

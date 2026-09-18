@@ -24,6 +24,25 @@ ou `dotnet publish -r win-x64 --self-contained` puis `New-Service` en PowerShell
 
 `LibreHardwareMonitorLib`, avec `Computer { IsCpuEnabled, IsGpuEnabled, IsMemoryEnabled = true }`.
 
+### Prérequis : PawnIO
+
+**Depuis LibreHardwareMonitor 0.9.5, la bibliothèque ne fournit plus de driver noyau.**
+Elle embarque des modules bytecode (`IntelMSR.bin`, `AMDFamily17`, `LpcIO`…) et les
+exécute dans [**PawnIO**](https://pawnio.eu), un driver signé qui exécute du code
+sandboxé au lieu d'ouvrir un accès matériel brut. C'est ce qui le rend compatible
+avec l'intégrité de la mémoire, là où l'ancien `WinRing0` figure désormais sur la
+liste des pilotes vulnérables de Microsoft.
+
+À installer sur le PC, une fois. **Sans lui, aucune lecture MSR** : températures,
+fréquences et puissances CPU sortent toutes à `null`, sans erreur, sans exception.
+`Computer.Open()` réussit quand même — c'est le piège.
+
+Ce qui fonctionne sans PawnIO : charges CPU (compteurs Windows), RAM, et tous les
+capteurs GPU (API du pilote graphique). D'où un diagnostic trompeur : la moitié des
+valeurs remontent normalement.
+
+`--sensors` affiche l'état de PawnIO en deuxième ligne.
+
 **Risque bloquant à lever en tout premier dans M1** : LibreHardwareMonitor charge un
 driver noyau pour lire les capteurs. Sur Windows 11 avec l'**intégrité de la mémoire**
 (Sécurité Windows → Sécurité de l'appareil → Isolation du noyau) activée, ce chargement

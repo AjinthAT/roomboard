@@ -40,9 +40,15 @@ sélection des capteurs se fait par nom, pas par « premier du bon type ».
 | VRAM | `GPU Memory Used` / `GPU Memory Total` | `D3D Dedicated Memory Used` |
 | RAM | bloc `Total Memory` | le bloc `Virtual Memory`, qui coexiste |
 
-**Les températures exigent l'élévation.** Sans elle, les capteurs sont présents mais
-valent `null` ; le GPU, lui, remonte sa température sans privilège via l'API NVIDIA.
-En service Windows (compte SYSTEM) la question ne se pose pas.
+**Deux prérequis pour les températures CPU**, constatés sur cette machine :
+1. **PawnIO installé** (https://pawnio.eu). L'intégrité de la mémoire est active ici
+   (`SecurityServicesRunning = {2, 7}`), ce qui bloque l'ancien driver `WinRing0`.
+   PawnIO est signé et compatible HVCI : rien à désactiver côté sécurité.
+2. **Processus élevé**, ou service Windows en compte SYSTEM.
+
+Sans ces deux conditions, les capteurs de température CPU existent mais valent `null`,
+sans la moindre erreur. Le GPU, lui, remonte tout via l'API NVIDIA sans privilège
+particulier — d'où un diagnostic trompeur si on ne regarde que lui.
 
 ## Réseau
 

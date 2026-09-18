@@ -56,9 +56,11 @@ Vérifié le 2026-09-18, côté Core, avec un agent simulé :
 - Bundle : **87,4 Ko gzip** sur 200 après l'ajout de `@microsoft/signalr`.
 
 Restent à confirmer sur le matériel réel :
-- [ ] Agent installé sur le PC Windows (procédure dans `06-agent-windows.md`)
-- [ ] Températures CPU/GPU réelles — c'est ici que le driver LibreHardwareMonitor
-      peut être bloqué par l'intégrité de la mémoire
+- [x] Agent copié sur le PC, `--sensors` exécuté, matériel relevé
+- [x] Températures **GPU** réelles : `GPU Core` à 40,4 °C
+- [ ] Températures **CPU** : nécessitent PawnIO, non installé lors du premier essai.
+      L'intégrité de la mémoire est active sur ce PC, mais PawnIO la supporte —
+      aucun compromis de sécurité nécessaire. Voir `06-agent-windows.md`.
 - [ ] Réveil effectif du PC (WoL activé dans le BIOS **et** sur la carte Intel)
 - [ ] Carte PC affichée sur l'iPad
 

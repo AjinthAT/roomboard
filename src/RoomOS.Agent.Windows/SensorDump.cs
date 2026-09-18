@@ -35,7 +35,16 @@ public static class SensorDump
         }
 
         Console.WriteLine($"Administrateur : {IsAdministrator()}");
+        Console.WriteLine($"PawnIO         : {(IsPawnIoInstalled() ? "installé" : "ABSENT — https://pawnio.eu")}");
         Console.WriteLine();
+
+        if (!IsPawnIoInstalled())
+        {
+            Console.WriteLine("Sans PawnIO, aucune lecture de registre MSR n'est possible :");
+            Console.WriteLine("  températures, fréquences et puissances CPU sortiront toutes à « null ».");
+            Console.WriteLine("  Charges CPU, RAM et capteurs GPU fonctionnent sans lui.");
+            Console.WriteLine();
+        }
 
         foreach (var hardware in computer.Hardware)
         {
@@ -65,6 +74,22 @@ public static class SensorDump
         {
             Dump(sub, indent + 2);
         }
+    }
+
+    /// <summary>
+    /// PawnIO s'installe en service noyau. LibreHardwareMonitor ne fournit plus de
+    /// driver depuis la 0.9.5 : il embarque des modules bytecode et les exécute dans
+    /// PawnIO, qui est signé et compatible avec l'intégrité de la mémoire.
+    /// </summary>
+    private static bool IsPawnIoInstalled()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
+        return File.Exists(Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.System), "drivers", "PawnIO.sys"));
     }
 
     private static bool IsAdministrator()
