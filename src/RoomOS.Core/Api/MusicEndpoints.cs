@@ -18,6 +18,11 @@ public static class MusicEndpoints
 
         group.MapGet("/now-playing", (StateStore state) => Results.Ok(state.Music));
 
+        // Sert à renseigner ROOMOS__Spotify__PcDeviceHint sans deviner le nom que
+        // Spotify donne à la machine (docs/09-integrations.md).
+        group.MapGet("/devices", async (IMusicProvider music, CancellationToken ct) =>
+            Results.Ok(await music.GetDevicesAsync(ct)));
+
         group.MapPost("/play", (PlayRequest? body, IMusicProvider music, CancellationToken ct) =>
             Guard(ct => music.PlayAsync(body?.Uri, ct), ct));
 
