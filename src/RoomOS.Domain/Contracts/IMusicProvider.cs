@@ -34,6 +34,9 @@ public interface IMusicProvider
     /// jouait la dernière fois — un téléphone, par exemple (ADR D11).
     /// </remarks>
     Task TransferToAsync(string hint, CancellationToken ct);
+
+    /// <summary>Transfère la lecture vers un appareil désigné par son identifiant.</summary>
+    Task TransferToDeviceAsync(string deviceId, CancellationToken ct);
 }
 
 public sealed record MusicDevice(string Id, string Name, bool IsActive, string Type);

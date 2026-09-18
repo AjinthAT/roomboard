@@ -143,11 +143,16 @@ public sealed class SpotifyMusicProvider(
             return;
         }
 
-        // play: false — on transfère sans forcer la lecture. L'étape music.play qui
-        // suit décide, ou n'existe pas.
-        await SendAsync(HttpMethod.Put, "/me/player",
-            new { device_ids = new[] { target.Id }, play = false }, ct);
+        await TransferToDeviceAsync(target.Id, ct);
     }
+
+    /// <summary>
+    /// <c>play: false</c> — on transfère sans forcer la lecture. L'étape
+    /// <c>music.play</c> qui suit décide, ou n'existe pas.
+    /// </summary>
+    public Task TransferToDeviceAsync(string deviceId, CancellationToken ct) =>
+        SendAsync(HttpMethod.Put, "/me/player",
+            new { device_ids = new[] { deviceId }, play = false }, ct);
 
     private async Task SendAsync(HttpMethod method, string path, object? body, CancellationToken ct)
     {

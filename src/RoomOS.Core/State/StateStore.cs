@@ -91,19 +91,31 @@ public sealed class StateStore
 
     public MusicState Music => _music;
 
+    /// <summary>
+    /// Resynchronisation périodique de la progression. Le sondage tourne à 3 s :
+    /// tout diffuser ferait vingt messages par minute pour une barre qui avance
+    /// toute seule côté client. Un battement de 15 s suffit à rattraper une avance
+    /// rapide ou un déplacement manuel dans le morceau.
+    /// </summary>
+    private static readonly TimeSpan MusicHeartbeat = TimeSpan.FromSeconds(15);
+
+    private DateTimeOffset _lastMusicBroadcast = DateTimeOffset.MinValue;
+
     public void SetMusic(MusicState music)
     {
         var previous = _music;
         _music = music;
 
-        // La progression du morceau avance à chaque sondage : la diffuser ferait un
-        // message toutes les 3 s pour une valeur que l'UI n'affiche pas en continu.
-        // Seul un vrai changement compte.
-        if (previous.Link == music.Link && SameTrack(previous.NowPlaying, music.NowPlaying))
+        var now = _time.GetUtcNow();
+        var changed = previous.Link != music.Link || !SameTrack(previous.NowPlaying, music.NowPlaying);
+        var stale = music.NowPlaying.IsPlaying && now - _lastMusicBroadcast >= MusicHeartbeat;
+
+        if (!changed && !stale)
         {
             return;
         }
 
+        _lastMusicBroadcast = now;
         NowPlayingChanged?.Invoke(new NowPlayingChanged(music.Link, music.NowPlaying));
     }
 
