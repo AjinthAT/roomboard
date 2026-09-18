@@ -78,6 +78,20 @@ Tailscale fournira un certificat valide en M6 sans toucher à Let's Encrypt.
 **Mais** : l'authentification par token est présente **dès M1**, pas en M6.
 
 ---
+### D11 — Transfert d'appareil Spotify ajouté au périmètre
+**Retenu** : `PUT /me/player` pour transférer la lecture vers le PC avant les
+commandes musicales d'une scène.
+**Écarté** : accepter que les scènes pilotent l'appareil actif du compte, quel qu'il
+soit, et retirer `music.play` de la scène Gaming.
+**Pourquoi** : constaté en M3, l'appareil actif était un téléphone. Une scène
+« Gaming » qui lance la musique sur le téléphone de l'utilisateur pendant qu'il
+s'installe devant son PC ne rend pas le service attendu. Le critère de réussite du
+projet — « tu appuies sur Gaming, tu poses l'iPad, et tout est prêt » — n'est pas
+tenable autrement.
+**Coût** : un endpoint de plus dans le périmètre V1, et un indice de nom à configurer.
+**Décidé le** 2026-09-18, à l'ouverture de M5.
+
+---
 ### D10 — Interdits permanents
 Kubernetes, PostgreSQL, Redis, Kafka, microservices, CQRS, Event Sourcing.
 Le projet pilote quatre appareils dans une chambre. Toute infrastructure au-delà de

@@ -76,14 +76,17 @@ choisie. Conséquences :
 - l'étape `music.play` de la scène **Gaming** (M5) lancerait la musique sur le
   téléphone, ce qui contredit son intention.
 
-Sans effet en M3, où l'on ne fait qu'afficher et piloter la lecture en cours. **À
-trancher avant M5.** Deux options :
-1. `PUT /me/player` (transfer) vers l'appareil dont le nom correspond au PC, avant
-   toute commande de scène. L'endpoint existe et est conservé.
-2. Accepter le comportement et ne pas mettre `music.play` dans Gaming.
+**Tranché le 2026-09-18 : option 1.** `PUT /me/player` (transfer) est ajouté au
+périmètre V1, sur décision explicite. Les scènes transfèrent la lecture vers le PC
+avant toute commande musicale.
 
-L'option 1 ajoute un endpoint au périmètre V1 : c'est une décision, pas une
-correction.
+La reconnaissance du PC se fait par **indice de nom**, comme pour les sorties audio :
+`ROOMOS__Spotify__PcDeviceHint`. Spotify nomme généralement un appareil d'après le
+nom de la machine. `GET /api/music/devices` liste les appareils visibles pour
+renseigner cet indice sans deviner.
+
+Si aucun appareil ne correspond, l'étape de transfert échoue proprement et la scène
+continue : mieux vaut de la musique sur le mauvais appareil que pas de scène du tout.
 
 ## Zigbee2MQTT
 
