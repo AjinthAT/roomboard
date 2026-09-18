@@ -14,7 +14,7 @@ le précédent n'est pas utilisé pour de vrai pendant quelques jours.
 
 Vérifié le 2026-09-18 :
 - `docker compose up -d` → conteneur `roomos-core` up, image 341 Mo.
-- `GET /healthz` répond `{"status":"ok"}` sur `192.168.1.30:8080`, le front affiche
+- `GET /healthz` répond `{"status":"ok"}` sur `192.168.1.x:8080`, le front affiche
   « Core en ligne ».
 - `dotnet test` : 1/1. Agent Windows publié en `win-x64` depuis Linux.
 - Bundle : **70,4 Ko gzip** sur un budget de 200 Ko.

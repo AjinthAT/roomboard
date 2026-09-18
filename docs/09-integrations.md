@@ -50,10 +50,10 @@ invitation à ajouter Plex.
 - Flux **Authorization Code + PKCE**, une fois, depuis un navigateur.
 - **Redirect URI : `http://127.0.0.1:8080/api/music/callback`**, et rien d'autre.
   Spotify impose HTTPS pour toute adresse non-loopback depuis 2025. Une route directe
-  du Core en `http://192.168.1.30:8080/...` est **refusée**, et `localhost` l'est aussi :
+  du Core en `http://192.168.1.x:8080/...` est **refusée**, et `localhost` l'est aussi :
   seule l'IP de bouclage littérale est acceptée en HTTP.
 - Conséquence pratique : le Core n'ayant pas de navigateur, l'autorisation se fait
-  depuis le PC à travers un tunnel SSH — `ssh -L 8080:127.0.0.1:8080 ajin@192.168.1.30`
+  depuis le PC à travers un tunnel SSH — `ssh -L 8080:127.0.0.1:8080 ajin@192.168.1.x`
   — de sorte que `127.0.0.1:8080` dans le navigateur atteigne bien le Core. Une seule
   fois, à la mise en service.
 - Scopes : `user-read-playback-state`, `user-modify-playback-state`,

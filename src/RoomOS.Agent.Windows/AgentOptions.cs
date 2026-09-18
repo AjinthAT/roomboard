@@ -4,7 +4,7 @@ public sealed class AgentOptions
 {
     public const string SectionName = "Core";
 
-    public string Url { get; set; } = "http://192.168.1.30:8080";
+    public string Url { get; set; } = "http://192.168.1.x:8080";
     public string AgentToken { get; set; } = string.Empty;
     public string PcId { get; set; } = "gaming-pc";
 }

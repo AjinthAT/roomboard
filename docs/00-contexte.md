@@ -83,17 +83,21 @@ si l'une devient la sortie active, `activeOutputId` vaut `null` et l'UI affiche
 
 | Nom | Valeur | Note |
 |---|---|---|
-| `CORE_HOST` | **`192.168.1.30`** | VM `vm-102`, `ens18`, **IP statique** dans `/etc/network/interfaces`. Rien à réserver côté DHCP. |
+| `CORE_HOST` | **`192.168.1.x`** | VM `vm-102`, `ens18`, **IP statique** dans `/etc/network/interfaces`. Rien à réserver côté DHCP. |
 | `CORE_PORT` | `8080` | HTTP |
 | `PC_MAC` | **`AA:BB:CC:DD:EE:FF`** | Carte Intel Ethernet. Ni le Bluetooth, ni les TAP-Windows d'OpenVPN. |
-| `PC_IP` | **`192.168.1.150`** | IP statique, confirmée |
+| `PC_IP` | **`192.168.1.y`** | IP statique, confirmée |
 
 > Les deux adresses sont statiques, configurées sur les machines elles-mêmes. Aucune
 > dépendance au bail DHCP de la box, donc rien qui puisse bouger après une coupure.
+>
+> **Le dernier octet est masqué dans ce dépôt public** : `192.168.1.x` désigne le Core
+> et `192.168.1.y` le PC. Les valeurs réelles vivent dans `deploy/.env`, qui n'est pas
+> versionné.
 | `BROADCAST` | `192.168.1.255` | Cible du paquet magique |
 
 > Le Core tourne sur la machine où l'on développe : **dev et prod sont la même VM**.
-> L'iPad peut donc charger `http://192.168.1.30:8080` dès M0, sans étape de déploiement.
+> L'iPad peut donc charger `http://192.168.1.x:8080` dès M0, sans étape de déploiement.
 >
 > **Le plan d'adressage est complet.** Plus rien ne bloque M1.
 >
