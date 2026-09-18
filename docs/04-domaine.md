@@ -25,10 +25,19 @@
 `config_json` selon `kind` :
 ```jsonc
 // pc
-{ "mac": "AA:BB:CC:DD:EE:FF", "ip": "192.168.1.30", "broadcast": "192.168.1.255", "agentToken": "..." }
+{ "mac": "C8:7F:54:68:BB:40", "ip": "192.168.1.150", "broadcast": "192.168.1.255" }
 // light
 { "z2mFriendlyName": "desk_light", "supportsColor": true, "supportsBrightness": true }
 ```
+
+> **Aucun secret dans `config_json`.** Une version antérieure y plaçait un
+> `agentToken` par appareil, alors que `05-api.md` le définit comme la variable
+> d'environnement `ROOMOS__AgentToken`. C'est la variable qui fait autorité, pour
+> la même raison que pour `ApiToken` : un secret persisté en base est un secret de
+> plus à protéger, pour aucun gain avec un seul PC.
+>
+> Cette configuration réseau est réécrite à chaque démarrage depuis l'environnement :
+> `deploy/.env` fait autorité, la base n'est qu'un cache.
 
 > Une sortie audio **n'est pas** un `device`. Elle vit uniquement dans `audio_outputs`
 > ci-dessous. Une version antérieure de ce document la décrivait aux deux endroits,

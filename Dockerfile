@@ -24,6 +24,9 @@ RUN dotnet publish src/RoomOS.Core/RoomOS.Core.csproj -c Release -o /app --no-re
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=core /app ./
+# Le conteneur tourne en utilisateur non privilégié : /data doit lui appartenir
+# dans l'image, sinon le volume nommé est créé en root et SQLite ne peut pas écrire.
+RUN mkdir -p /data && chown $APP_UID:$APP_UID /data
 USER $APP_UID
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080

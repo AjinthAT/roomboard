@@ -66,8 +66,49 @@ problème se confirme, le contournement est de relancer la lecture après la bas
 
 `appsettings.json` à côté de l'exe :
 ```json
-{ "Core": { "Url": "http://192.168.1.20:8080", "AgentToken": "...", "PcId": "gaming-pc" },
+{ "Core": { "Url": "http://192.168.1.30:8080", "AgentToken": "...", "PcId": "gaming-pc" },
   "Telemetry": { "IntervalMs": 2000 } }
+```
+
+`AgentToken` doit être identique à `ROOMOS__AgentToken` dans `deploy/.env` côté Core.
+
+## Installation (procédure M1)
+
+Sur la VM, publier l'agent :
+
+```bash
+dotnet publish src/RoomOS.Agent.Windows -c Release -r win-x64 \
+  --self-contained false -o /tmp/roomos-agent
+```
+
+Copier `/tmp/roomos-agent` sur le PC, par exemple dans `C:\RoomOS\Agent`, renseigner
+`appsettings.json`, puis dans un **PowerShell administrateur** :
+
+```powershell
+# 1. Vérifier d'abord, en console : les températures remontent-elles ?
+cd C:\RoomOS\Agent
+.\RoomOS.Agent.Windows.exe
+
+# 2. Si oui, installer en service
+New-Service -Name RoomOSAgent `
+            -BinaryPathName "C:\RoomOS\Agent\RoomOS.Agent.Windows.exe" `
+            -StartupType Automatic
+Start-Service RoomOSAgent
+```
+
+L'étape 1 n'est pas facultative : c'est là qu'on voit si le driver de
+LibreHardwareMonitor se charge. En service, l'échec serait silencieux dans le
+journal d'événements.
+
+Le .NET Runtime 10 doit être présent sur le PC (`--self-contained false`). Sinon,
+republier avec `--self-contained true`, ce qui alourdit le dossier d'environ 70 Mo
+mais supprime la dépendance.
+
+### Désinstallation
+
+```powershell
+Stop-Service RoomOSAgent
+sc.exe delete RoomOSAgent
 ```
 
 ## Ce que l'agent ne fait pas

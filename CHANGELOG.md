@@ -5,9 +5,41 @@ Toutes les évolutions notables de RoomOS. Une entrée par jalon de `docs/10-roa
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Le projet ne suit pas SemVer : il suit ses jalons.
 
-## [Non publié] — M1, PC
+## M1 — PC — 2026-09-18
 
-En cours.
+### Ajouté
+- Persistance SQLite via EF Core : migration initiale (`rooms`, `devices`) et seed
+  idempotent de la pièce et du `gaming-pc`.
+- Authentification par jeton statique, avec deux rôles distincts pour le front et
+  pour l'agent. Le jeton est accepté dans l'en-tête `Authorization` et, sur les hubs,
+  en query string — seule façon d'authentifier un WebSocket depuis un navigateur.
+- Hub agent : enregistrement, télémétrie, acquittements. La déconnexion du hub est
+  le seul signal d'état « hors ligne » : pas de ping.
+- Hub client et diffuseur relayant les mutations du `StateStore`.
+- `GET /api/state`, `POST /api/pc/{id}/wake|shutdown|restart`.
+- Wake-on-LAN : construction du paquet magique couverte par des tests unitaires,
+  émission en broadcast sur les ports 9 et 7.
+- Agent Windows : connexion sortante avec backoff plafonné à 30 s, télémétrie toutes
+  les 2 s via LibreHardwareMonitor, acquittement **avant** exécution des commandes
+  d'extinction.
+- Front : saisie du jeton, store externe hors du state React, throttle à 1 Hz,
+  carte PC avec CPU, GPU, RAM et actions, bandeau de reconnexion.
+
+### Décidé
+- **Aucun secret en base.** `AgentToken` rejoint `ApiToken` dans les variables
+  d'environnement. `config_json` ne porte plus que la configuration réseau.
+- **Démarrage refusé si un jeton est vide** : un jeton vide n'authentifie personne.
+- **Schéma limité à ce que M1 utilise.** Les autres tables viendront avec leurs jalons.
+
+### Sécurité
+- EF Core monté de 10.0.0 à 10.0.12 : la version initiale tirait
+  `SQLitePCLRaw.lib.e_sqlite3` 2.1.11, affecté par GHSA-2m69-gcr7-jv3q (gravité
+  élevée). Un contrôle `dotnet list package --vulnerable` a été ajouté à la CI.
+
+### Corrigé
+- Le volume `/data` était créé en root alors que le conteneur tourne en utilisateur
+  non privilégié : SQLite ne pouvait pas ouvrir la base. Le répertoire est désormais
+  créé et attribué dans l'image.
 
 ## M0 — Squelette — 2026-09-18
 

@@ -32,15 +32,46 @@ Restent à confirmer par l'utilisateur, hors de portée de la machine :
 - `InvariantGlobalization=true` : pas d'ICU dans l'image runtime.
 
 ## M1 — PC (le cœur)
-- [ ] SQLite + EF Core + migration initiale + seed d'un `gaming-pc`
-- [ ] Hub agent, auth par token, enregistrement
-- [ ] Agent Windows : service, connexion, télémétrie CPU/RAM/GPU 2 s
-- [ ] Wake-on-LAN, shutdown, restart
-- [ ] `GET /api/state`, hub client, carte PC dans l'UI
-- [ ] Auth par token sur l'API et le front
+- [x] SQLite + EF Core + migration initiale + seed d'un `gaming-pc`
+- [x] Hub agent, auth par token, enregistrement
+- [x] Agent Windows : service, connexion, télémétrie CPU/RAM/GPU 2 s
+- [x] Wake-on-LAN, shutdown, restart
+- [x] `GET /api/state`, hub client, carte PC dans l'UI
+- [x] Auth par token sur l'API et le front
 
 **DoD** : depuis l'iPad, tu allumes et tu éteins le PC, et tu vois la température CPU
 bouger en direct. **À ce stade le projet est déjà utile tous les jours.**
+
+Vérifié le 2026-09-18, côté Core, avec un agent simulé :
+- Auth : 401 sans jeton, 401 avec un mauvais jeton, 403 avec le jeton agent sur une
+  route client, 200 avec le bon. 15 tests au vert.
+- Hub agent : `Register` → `online: true` avec uptime ; déconnexion → `online: false`
+  et télémétrie remise à zéro, sans ping.
+- Commandes : `shutdown` → reçue par l'agent → `Ack` tracé par le Core. `409` quand
+  l'agent est absent, `404` sur un PC inconnu.
+- Wake-on-LAN : paquet magique réellement émis vers `C8:7F:54:68:BB:40`, 202 immédiat.
+- Télémétrie : 6 ticks en 12 s côté client, soit 0,5 Hz — le plafond serveur de 1 Hz
+  n'est jamais atteint, exactement comme prévu.
+- Base persistée dans le volume Docker, survit à un `compose restart`.
+- Bundle : **87,4 Ko gzip** sur 200 après l'ajout de `@microsoft/signalr`.
+
+Restent à confirmer sur le matériel réel :
+- [ ] Agent installé sur le PC Windows (procédure dans `06-agent-windows.md`)
+- [ ] Températures CPU/GPU réelles — c'est ici que le driver LibreHardwareMonitor
+      peut être bloqué par l'intégrité de la mémoire
+- [ ] Réveil effectif du PC (WoL activé dans le BIOS **et** sur la carte Intel)
+- [ ] Carte PC affichée sur l'iPad
+
+### Décisions prises pendant M1
+- **Aucun secret en base.** `AgentToken` suit la même règle qu'`ApiToken` : variable
+  d'environnement. `config_json` ne contient que MAC, IP et broadcast, réécrits depuis
+  l'environnement à chaque démarrage.
+- **Le Core refuse de démarrer si un jeton est vide.** Un jeton vide n'authentifie
+  personne : mieux vaut un échec au démarrage qu'une API ouverte.
+- **Schéma limité à `rooms` et `devices`.** Les tables `audio_outputs`, `scenes`,
+  `integration_tokens` et `settings` arriveront avec les jalons qui les utilisent.
+- **EF Core monté en 10.0.12** : la 10.0.0 tirait un `SQLitePCLRaw` vulnérable
+  (GHSA-2m69-gcr7-jv3q). Un contrôle a été ajouté à la CI pour éviter la récidive.
 
 ## M2 — Audio
 - [ ] Énumération des sorties par l'agent

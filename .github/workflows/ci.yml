@@ -30,6 +30,12 @@ jobs:
       - name: Test
         run: dotnet test tests/RoomOS.Core.Tests -c Release --no-build
 
+      # Ajouté après qu'EF Core 10.0.0 a tiré un SQLitePCLRaw vulnérable (GHSA-2m69-gcr7-jv3q).
+      - name: Vulnerable packages
+        run: |
+          dotnet list src/RoomOS.Core package --vulnerable --include-transitive 2>&1 | tee audit.log
+          ! grep -q 'a des packages vulnérables\|has the following vulnerable packages' audit.log
+
   agent:
     name: Agent Windows
     runs-on: ubuntu-latest
