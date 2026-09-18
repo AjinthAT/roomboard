@@ -58,7 +58,7 @@ jobs:
       - name: Publish win-x64
         run: dotnet publish src/RoomOS.Agent.Windows -c Release -r win-x64 --self-contained false -o artifacts/agent
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: roomos-agent-windows
           path: artifacts/agent
@@ -92,7 +92,7 @@ jobs:
       - name: Bundle budget
         run: npm run check:bundle
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: roomos-web
           path: src/RoomOS.Core/wwwroot
