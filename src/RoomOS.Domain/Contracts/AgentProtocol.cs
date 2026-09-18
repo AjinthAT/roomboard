@@ -11,6 +11,7 @@ public static class AgentProtocol
     {
         public const string Register = "Register";
         public const string PushTelemetry = "PushTelemetry";
+        public const string PushAudioState = "PushAudioState";
         public const string Ack = "Ack";
     }
 
@@ -19,6 +20,9 @@ public static class AgentProtocol
     {
         public const string Shutdown = "Shutdown";
         public const string Restart = "Restart";
+        public const string SetAudioOutput = "SetAudioOutput";
+        public const string SetVolume = "SetVolume";
+        public const string SetMute = "SetMute";
     }
 }
 
@@ -30,3 +34,16 @@ public sealed record CommandAck(string CommandId, string Status, string? Message
 
 /// <summary>Commande envoyée à l'agent.</summary>
 public sealed record AgentCommand(string CommandId);
+
+/// <summary>État audio publié par l'agent, à chaque changement et en filet toutes les 10 s.</summary>
+public sealed record AgentAudioState(
+    string? ActiveWindowsDeviceId,
+    int Volume,
+    bool Muted,
+    IReadOnlyList<WindowsAudioOutput> Outputs);
+
+public sealed record SetAudioOutputCommand(string CommandId, string WindowsDeviceId);
+
+public sealed record SetVolumeCommand(string CommandId, int Level);
+
+public sealed record SetMuteCommand(string CommandId, bool Muted);

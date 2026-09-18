@@ -48,3 +48,20 @@ export type PcAction = 'wake' | 'shutdown' | 'restart';
 export function runPcAction(pcId: string, action: PcAction): Promise<unknown> {
   return request(`/api/pc/${encodeURIComponent(pcId)}/${action}`, { method: 'POST' });
 }
+
+function putAudio(pcId: string, path: string, body: unknown): Promise<unknown> {
+  return request(`/api/audio/${encodeURIComponent(pcId)}/${path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+export const setAudioOutput = (pcId: string, outputId: string) =>
+  putAudio(pcId, 'output', { outputId });
+
+export const setAudioVolume = (pcId: string, level: number) =>
+  putAudio(pcId, 'volume', { level });
+
+export const setAudioMute = (pcId: string, muted: boolean) =>
+  putAudio(pcId, 'mute', { muted });

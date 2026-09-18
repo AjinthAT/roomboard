@@ -8,8 +8,16 @@ public static class RoomProtocol
 {
     public const string PcStateChanged = "PcStateChanged";
     public const string TelemetryUpdated = "TelemetryUpdated";
+    public const string AudioStateChanged = "AudioStateChanged";
 }
 
 public sealed record PcStateChanged(string Id, bool Online, long? UptimeSec);
 
 public sealed record TelemetryUpdated(string Id, Telemetry Telemetry);
+
+public sealed record AudioStateChanged(
+    string PcId,
+    string? ActiveOutputId,
+    int Volume,
+    bool Muted,
+    IReadOnlyList<AudioOutputInfo> Outputs);

@@ -84,12 +84,34 @@ Restent à éprouver, en conditions réelles :
   Corrigé à la revue de sécurité de fin de jalon.
 
 ## M2 — Audio
-- [ ] Énumération des sorties par l'agent
-- [ ] Bascule JBL / casque, volume, mute
-- [ ] Persistance du mapping `windowsDeviceId` ↔ sortie
-- [ ] Carte Audio dans l'UI
+- [x] Énumération des sorties par l'agent
+- [x] Bascule JBL / casque, volume, mute
+- [x] Persistance du mapping `windowsDeviceId` ↔ sortie
+- [x] Carte Audio dans l'UI
 
 **DoD** : bascule fiable en une pression, y compris après un redémarrage du PC.
+
+Vérifié le 2026-09-18 sur le matériel :
+- Les deux sorties résolues par indice de nom, puis leurs identifiants Windows
+  persistés : `jbl` → « Haut-parleurs (JBL Charge 6) », `headset` → « Casque pour
+  téléphone (CORSAIR HS80 MAX WIRELESS) ».
+- Bascule, volume et mute pilotés depuis l'iPad, quatre commandes acquittées `done`.
+- `IPolicyConfig` fonctionne sur ce Windows 11, variante moderne, trois rôles appliqués.
+
+Reste à éprouver :
+- [ ] **Après un redémarrage du PC** — c'est le cœur de la DoD, et précisément ce que
+      la persistance des identifiants doit garantir. Non vérifié à ce stade.
+- [ ] Comportement des applications déjà ouvertes au moment de la bascule (Spotify
+      est réputé conserver son point de sortie).
+
+### Décisions prises pendant M2
+- **P/Invoke direct sur `IPolicyConfig`** plutôt qu'`AudioSwitcher`, dont la dernière
+  version est une alpha de 2016 ciblant .NETFramework. Voir `06-agent-windows.md`.
+- **L'indice de correspondance vise le matériel, pas le rôle Windows.** « Casque »
+  aurait désigné « Casque pour téléphone », le canal communications en bande étroite.
+- **Le curseur de volume est le seul retour optimiste du projet.** Un curseur qui ne
+  suit pas le doigt est inutilisable ; il repasse sous contrôle du serveur dès que
+  celui-ci le rejoint.
 
 ## M3 — Spotify
 - [ ] OAuth PKCE, stockage du refresh token

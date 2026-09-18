@@ -5,6 +5,34 @@ Toutes les évolutions notables de RoomOS. Une entrée par jalon de `docs/10-roa
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Le projet ne suit pas SemVer : il suit ses jalons.
 
+## M2 — Audio — 2026-09-18
+
+### Ajouté
+- Table `audio_outputs` et sa migration, alimentée depuis la configuration.
+- Résolveur associant les périphériques énumérés par l'agent aux sorties déclarées :
+  identifiant Windows d'abord, indice de nom en repli, puis persistance de
+  l'identifiant trouvé pour ne plus rejouer la recherche approximative.
+- `PUT /api/audio/{pcId}/output|volume|mute`, commandes et acquittements côté agent.
+- Énumération WASAPI via NAudio, bascule de sortie par défaut via `IPolicyConfig`
+  en P/Invoke, avec les deux variantes connues de l'interface et les trois rôles.
+- Mode diagnostic `--audio`, listant les périphériques et éprouvant la bascule sans
+  passer par le Core.
+- Carte Audio : sélecteur de sortie, volume, mute, désactivés quand le hub ou le PC
+  est coupé.
+
+### Décidé
+- **P/Invoke plutôt qu'`AudioSwitcher`** : sa dernière version est une alpha d'octobre
+  2016 ciblant .NETFramework, inutilisable sous .NET 10.
+- **Le curseur de volume est le seul retour optimiste du projet**, et c'est assumé :
+  un curseur qui ne suit pas le doigt est inutilisable.
+
+### Corrigé
+- Le binder de configuration .NET ajoute aux collections au lieu de les remplacer :
+  deux sorties par défaut plus deux venant de l'environnement en auraient produit
+  quatre. Le repli est passé dans le seeder.
+- `GET /api/state` ne renvoyait aucune sortie tant que l'agent n'avait rien poussé,
+  laissant la carte Audio vide après un redémarrage du Core.
+
 ## M1 — PC — 2026-09-18
 
 ### Ajouté

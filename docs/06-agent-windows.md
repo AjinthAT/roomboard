@@ -64,12 +64,22 @@ Points d'attention connus :
 `NAudio` / `MMDeviceEnumerator` pour énumérer les sorties.
 
 Le changement de périphérique par défaut n'est pas exposé par une API publique Windows.
-Deux options, à trancher en M2 :
-- **`AudioSwitcher.AudioApi.CoreAudio`** (NuGet) : expose `SetDefaultDevice`, s'appuie sur
-  l'interface COM non documentée `IPolicyConfig`. C'est la voie courante.
-- Appeler `IPolicyConfig` directement via P/Invoke. Plus de contrôle, plus de code.
 
-Commencer par `AudioSwitcher`. Si ça échoue sur Windows 11 récent, basculer sur le P/Invoke.
+**Tranché en M2 : P/Invoke direct sur `IPolicyConfig`.**
+
+Le pack recommandait initialement d'essayer `AudioSwitcher.AudioApi.CoreAudio` en
+premier. Vérification faite au moment de l'implémenter, sa dernière version est
+`4.0.0-alpha5`, **publiée le 6 octobre 2016**, jamais sortie de préversion, et elle
+ne cible que .NETFramework 4.0 et 4.5 — ni netstandard, ni .NET Core. Elle ne se
+charge pas sous .NET 10.
+
+On écrit donc l'appel à `IPolicyConfig` à la main : une centaine de lignes, aucune
+dépendance supplémentaire, et c'est exactement ce que faisait `AudioSwitcher` en
+interne. L'interface reste non documentée par Microsoft ; son GUID et l'ordre de ses
+méthodes sont figés depuis Windows 7, mais c'est le point du projet le plus exposé à
+une rupture Windows. Si elle casse, le repli est l'absence de bascule automatique,
+pas un plantage : `SetDefaultOutput` renvoie un échec, la commande est acquittée en
+erreur et l'UI le montre.
 
 Changer la sortie par défaut ne bascule pas toujours les applications déjà en cours
 (Spotify notamment garde parfois son endpoint). Comportement à constater en M2 ; si le
