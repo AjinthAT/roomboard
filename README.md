@@ -33,6 +33,7 @@ pour construire le projet sans avoir à redécider l'architecture à chaque sess
 | `docs/10-roadmap.md` | Jalons M0 → M6 avec definition of done |
 | `docs/11-conventions.md` | Arbo repo, conventions de code, tests, CI |
 | `docs/12-decisions.md` | ADR courts : décisions prises et alternatives écartées |
+| `docs/13-installation.md` | Installation complète et restauration après perte |
 
 ## État
 
