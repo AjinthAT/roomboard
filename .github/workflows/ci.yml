@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "m*-*"]
+  pull_request:
+    branches: [main]
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  core:
+    name: Core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore src/RoomOS.Core tests/RoomOS.Core.Tests
+
+      - name: Build
+        run: dotnet build src/RoomOS.Core tests/RoomOS.Core.Tests -c Release --no-restore
+
+      - name: Test
+        run: dotnet test tests/RoomOS.Core.Tests -c Release --no-build
+
+  agent:
+    name: Agent Windows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      # Compilation croisée depuis Linux grâce à EnableWindowsTargeting.
+      - name: Publish win-x64
+        run: dotnet publish src/RoomOS.Agent.Windows -c Release -r win-x64 --self-contained false -o artifacts/agent
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: roomos-agent-windows
+          path: artifacts/agent
+          retention-days: 7
+
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install
+        run: npm ci --no-fund --no-audit
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npx vite build
+
+      # Budget imposé par docs/07-frontend.md : la cible est un iPad 5.
+      - name: Bundle budget
+        run: npm run check:bundle
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: roomos-web
+          path: src/RoomOS.Core/wwwroot
+          retention-days: 7

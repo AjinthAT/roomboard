@@ -1,0 +1,19 @@
+# RoomOS — M0 : le Core seul.
+# Mosquitto et Zigbee2MQTT arrivent en M4, Prometheus et Grafana en M6.
+services:
+  core:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: roomos-core:latest
+    container_name: roomos-core
+    restart: unless-stopped
+    ports:
+      - "${CORE_PORT:-8080}:8080"
+    env_file:
+      - .env
+    volumes:
+      - roomos-data:/data
+
+volumes:
+  roomos-data:
