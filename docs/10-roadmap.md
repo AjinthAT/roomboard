@@ -181,6 +181,13 @@ Vérifié le 2026-09-19 **sur le matériel réel** :
 Reste à éprouver :
 - [ ] L'état reste juste quand la lampe est pilotée par son interrupteur mural.
 
+### Ajouté après coup
+- **Choix de la couleur dans l'UI.** `01-vision.md` l'exigeait — « on/off, luminosité,
+  couleur si l'ampoule le permet » — et la carte ne l'exposait pas : le drapeau
+  `supportsColor` traversait tout le code jusqu'au front sans y servir. Huit teintes
+  prédéfinies plutôt qu'un sélecteur système : sur un panneau mural il faut un appui
+  et une cible d'au moins 44 px.
+
 ### Décisions prises pendant M4
 - **Mosquitto n'est publié que sur `127.0.0.1`.** Le Core l'atteint depuis le réseau
   hôte, Zigbee2MQTT par le réseau interne Docker, et rien depuis le LAN.
