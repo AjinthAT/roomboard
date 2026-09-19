@@ -4,7 +4,7 @@ import { roomStore } from '../store/roomStore';
 import { getState } from './client';
 import { readToken } from './token';
 import type {
-  AudioStateChanged, LightStateChanged, NowPlayingChanged, PcStateChanged,
+  AudioStateChanged, CatalogChanged, LightStateChanged, NowPlayingChanged, PcStateChanged,
   SceneFinished, SceneStarted, SceneStepCompleted, TelemetryUpdated,
 } from './types';
 
@@ -66,6 +66,9 @@ export function connectRoomHub(): { stop: () => void } {
     const { id, ...rest } = payload;
     roomStore.setLight(id, rest);
   });
+
+  connection.on('CatalogChanged', (p: CatalogChanged) =>
+    roomStore.setCatalog(p.scenes, p.routines));
 
   connection.on('SceneStarted', (p: SceneStarted) => roomStore.sceneStarted(p.runId, p.sceneId));
   connection.on('SceneStepCompleted', (p: SceneStepCompleted) =>

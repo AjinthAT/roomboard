@@ -5,6 +5,44 @@ Toutes les évolutions notables de RoomOS. Une entrée par jalon de `docs/10-roa
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Le projet ne suit pas SemVer : il suit ses jalons.
 
+## Éditeur de scènes et Spotify approfondi — 2026-09-19
+
+### Ajouté
+- **Éditeur de scènes** sur l'iPad : créer, réordonner, modifier et supprimer des
+  scènes sans toucher à la base. L'écran est piloté par une table de types d'étapes —
+  chaque type déclare ses champs — pour qu'ajouter un type au DSL n'oblige pas à
+  réécrire l'écran.
+- **CRUD complet** sur `/api/scenes` et `/api/routines`. Une routine se crée depuis
+  l'interface, toujours désactivée : on règle, on relit, puis on active.
+- **Validation à l'écriture du DSL.** Une étape en échec n'interrompt pas la scène
+  (règle 3 de `08-scenes.md`), donc une scène fausse s'exécute en silence et n'échoue
+  qu'à moitié, le soir, sans personne devant un journal. Sont refusés en 400 : type
+  inconnu, appareil manquant, appareil absent de la base, appareil du mauvais type,
+  `audio.setOutput` sans sortie, plus de 50 étapes. Vérifié en réel : `deviceId`
+  fautif refusé à l'enregistrement là où il donnait auparavant une étape en échec à
+  l'exécution.
+- **Événement `CatalogChanged`.** Sans lui, l'écran qui n'a pas fait l'édition
+  gardait son ancienne liste jusqu'à un rechargement — or un panneau mural n'est
+  jamais rechargé à la main. Vérifié avec un second client connecté au hub :
+  création, renommage, activation et suppression arrivent toutes les quatre.
+- **Spotify** : lecture aléatoire, répétition (piste / album / off), déplacement dans
+  le morceau en touchant la barre de progression, file d'attente, ajout à la file et
+  recherche. La recherche est **plafonnée à 10 résultats par Spotify**, c'est dit dans
+  l'écran plutôt que caché.
+
+### Corrigé
+- **Les identifiants de scènes gardaient les accents** : « Soirée ciné » donnait
+  `soirée`, encodé en `%C3%A9` dans chaque URL. Translittération explicite —
+  `string.Normalize` lèverait ici, le Core tourne en globalisation invariante.
+
+### Vérifié en réel
+- Scène créée depuis l'API, exécutée sur l'ampoule : allumage, couleur, fondu de 3 s
+  puis montée à 60 % en 2 s, les trois étapes en `succeeded`.
+- Suppression d'une scène utilisée par une routine refusée en 409, acceptée en 204
+  une fois la routine supprimée.
+- 66 tests au vert, 0 avertissement de compilation, bundle à **97,7 Ko gzip** sur les
+  200 autorisés.
+
 ## Routines et refonte des lampes — 2026-09-19
 
 ### Ajouté

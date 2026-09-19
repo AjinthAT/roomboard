@@ -64,6 +64,7 @@ builder.Services.AddSingleton<IStepExecutor, MusicPlayExecutor>();
 builder.Services.AddSingleton<IStepExecutor, MusicPauseExecutor>();
 builder.Services.AddSingleton<IStepExecutor, MusicSetVolumeExecutor>();
 builder.Services.AddSingleton<IStepExecutor, DelayExecutor>();
+builder.Services.AddSingleton<CatalogNotifier>();
 builder.Services.AddHostedService<RoomBroadcaster>();
 
 builder.Services.AddSignalR();

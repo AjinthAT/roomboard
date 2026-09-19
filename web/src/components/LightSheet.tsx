@@ -273,7 +273,19 @@ function White({
   );
 }
 
-const EFFECT_LABELS: Record<string, string> = {
+/**
+ * Les commandes de cycle de vie ne sont pas des ambiances : elles n'ont rien à
+ * faire dans une grille de choix, et « Arrêter » les remplace toutes.
+ */
+export function ambienceEffects(effects: readonly string[]): string[] {
+  const control = new Set([
+    'none', 'finish_effect', 'stop_effect', 'stop_hue_effect', 'okay', 'channel_change',
+  ]);
+
+  return effects.filter((e) => !control.has(e));
+}
+
+export const EFFECT_LABELS: Record<string, string> = {
   colorloop: 'Boucle de couleurs',
   candle: 'Bougie',
   fireplace: 'Cheminée',
@@ -299,12 +311,7 @@ function Effects({
   usable: boolean;
   onSend: (id: string, command: LightCommand) => void;
 }) {
-  // Les commandes de cycle de vie ne sont pas des ambiances : elles n'ont rien à
-  // faire dans une grille de choix, et « Arrêter » les remplace toutes.
-  const control = new Set([
-    'none', 'finish_effect', 'stop_effect', 'stop_hue_effect', 'okay', 'channel_change',
-  ]);
-  const ambiences = light.capabilities.effects.filter((e) => !control.has(e));
+  const ambiences = ambienceEffects(light.capabilities.effects);
 
   return (
     <div className="flex flex-col gap-3">

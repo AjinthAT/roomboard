@@ -265,7 +265,22 @@ Reste à faire, et **cela dépend de toi** :
 - **Le déploiement met à jour le clone canonique de la VM**, pas l'espace de travail
   du runner : un checkout là-bas lancerait une seconde pile à côté de la vraie.
 
-## Après M6 — à discuter, pas à coder
+## Après V1 — livré à la demande
 
-Prises connectées, capteurs, automatisations horaires, éditeur de scènes,
-client SwiftUI en second client, pièce supplémentaire.
+Ces travaux sortent des sept jalons. Ils sont détaillés dans `CHANGELOG.md`.
+
+- [x] **Module lampes étendu** : blanc, effets, roue de couleurs, vue par lampe.
+- [x] **Routines** — les « automatisations horaires » de la liste ci-dessous.
+- [x] **Éditeur de scènes** : création, réordonnancement, suppression depuis l'iPad,
+      avec validation du DSL à l'écriture.
+- [x] **Spotify approfondi** : aléatoire, répétition, déplacement dans le morceau,
+      file d'attente, recherche.
+
+À vérifier à la main :
+- [ ] Créer une scène depuis l'iPad, la lancer, la supprimer.
+- [ ] Créer une routine depuis l'iPad et la voir apparaître sur un second écran sans
+      rechargement (c'est ce que teste `CatalogChanged`).
+
+## Après cela — à discuter, pas à coder
+
+Prises connectées, capteurs, client SwiftUI en second client, pièce supplémentaire.

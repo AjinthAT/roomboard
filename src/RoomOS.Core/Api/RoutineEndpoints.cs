@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RoomOS.Core.Auth;
 using RoomOS.Core.Data;
+using RoomOS.Core.Hubs;
 using RoomOS.Core.Data.Entities;
 using RoomOS.Core.Routines;
 using RoomOS.Domain.Contracts;
@@ -19,7 +20,9 @@ public static class RoutineEndpoints
 
         group.MapGet("/", (RoomOsDbContext db, RoutineScheduler scheduler, CancellationToken ct) =>
             ListAsync(db, scheduler, ct));
+        group.MapPost("/", Create);
         group.MapPut("/{id}", Save);
+        group.MapDelete("/{id}", Delete);
 
         return app;
     }
@@ -41,11 +44,72 @@ public static class RoutineEndpoints
             scheduler.LastFired(r.Id)?.ToString("HH:mm")))];
     }
 
+    private static async Task<IResult> Create(
+        SaveRoutineRequest request, RoomOsDbContext db, CatalogNotifier notifier, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            return Results.BadRequest(new { message = "Une routine a besoin d'un nom." });
+        }
+
+        if (request.SceneId is not { } sceneId || !await db.Scenes.AnyAsync(s => s.Id == sceneId, ct))
+        {
+            return Results.BadRequest(new { message = "Il faut une scène existante." });
+        }
+
+        if (request.Time is not { } time || !TryParseMinutes(time, out var minutes))
+        {
+            return Results.BadRequest(new { message = "L'heure doit être au format HH:mm." });
+        }
+
+        var id = Guid.NewGuid().ToString("n")[..8];
+
+        db.Routines.Add(new Routine
+        {
+            Id = id,
+            Name = request.Name.Trim(),
+            SceneId = sceneId,
+            MinuteOfDay = minutes,
+            Days = request.Days is { Count: 7 } d ? string.Concat(d.Select(x => x ? '1' : '0')) : "1111111",
+            // Créée désactivée : on règle, on relit, puis on active.
+            Enabled = false,
+            SortOrder = await db.Routines.CountAsync(ct),
+        });
+
+        await db.SaveChangesAsync(ct);
+        await notifier.PublishAsync(db, ct);
+
+        return Results.Created($"/api/routines/{id}", new { id });
+    }
+
+    private static async Task<IResult> Delete(
+        string id,
+        RoomOsDbContext db,
+        RoutineScheduler scheduler,
+        CatalogNotifier notifier,
+        CancellationToken ct)
+    {
+        var routine = await db.Routines.FirstOrDefaultAsync(r => r.Id == id, ct);
+
+        if (routine is null)
+        {
+            return Results.NotFound(new { message = $"Routine « {id} » inconnue." });
+        }
+
+        db.Routines.Remove(routine);
+        await db.SaveChangesAsync(ct);
+        scheduler.Forget(id);
+        await notifier.PublishAsync(db, ct);
+
+        return Results.NoContent();
+    }
+
     private static async Task<IResult> Save(
         string id,
         SaveRoutineRequest request,
         RoomOsDbContext db,
         RoutineScheduler scheduler,
+        CatalogNotifier notifier,
         CancellationToken ct)
     {
         var routine = await db.Routines.FirstOrDefaultAsync(r => r.Id == id, ct);
@@ -99,6 +163,7 @@ public static class RoutineEndpoints
         // Une routine modifiée oublie son dernier déclenchement : avancer l'heure
         // d'une routine déjà partie aujourd'hui doit pouvoir la faire repartir.
         scheduler.Forget(id);
+        await notifier.PublishAsync(db, ct);
 
         return Results.Ok();
     }

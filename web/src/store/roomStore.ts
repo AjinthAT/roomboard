@@ -33,6 +33,7 @@ const NO_MUSIC: MusicState = {
   nowPlaying: {
     title: null, artist: null, albumArtUrl: null,
     isPlaying: false, progressMs: null, durationMs: null, deviceName: null,
+    shuffle: false, repeat: 'off',
   },
 };
 
@@ -101,6 +102,10 @@ class RoomStore {
       scenes: snapshot.scenes,
       routines: snapshot.routines,
     });
+  }
+
+  setCatalog(scenes: SceneInfo[], routines: RoutineInfo[]): void {
+    this.set({ scenes, routines });
   }
 
   patchRoutine(id: string, patch: Partial<RoutineInfo>): void {
