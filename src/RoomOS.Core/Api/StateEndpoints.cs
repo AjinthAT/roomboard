@@ -3,6 +3,7 @@ using RoomOS.Core.Auth;
 using RoomOS.Core.Data;
 using RoomOS.Core.Data.Entities;
 using RoomOS.Core.Integrations.Mqtt;
+using RoomOS.Core.Routines;
 using RoomOS.Core.State;
 using RoomOS.Domain.Contracts;
 
@@ -28,6 +29,7 @@ public static class StateEndpoints
         RoomOsDbContext db,
         StateStore state,
         MqttLightService mqtt,
+        RoutineScheduler scheduler,
         TimeProvider time,
         CancellationToken ct)
     {
@@ -65,7 +67,7 @@ public static class StateEndpoints
             await LightEndpoints.BuildSnapshotsAsync(db, state, mqtt, ct),
             state.Music,
             await SceneEndpoints.ListAsync(db, ct),
-            await RoutineEndpoints.ListAsync(db, ct),
+            await RoutineEndpoints.ListAsync(db, scheduler, ct),
             time.GetUtcNow());
 
         return Results.Ok(snapshot);

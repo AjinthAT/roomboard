@@ -253,6 +253,37 @@ public sealed class MqttLightService(
         }
 
         logger.LogInformation("Inventaire Zigbee : {Count} appareil(s) appairé(s).", names.Count);
+
+        // Zigbee2MQTT ne republie l'état d'une lampe qu'au changement. Après un
+        // redémarrage du Core, ses attributs resteraient donc inconnus jusqu'à ce que
+        // quelqu'un touche l'interrupteur. On les redemande une fois.
+        _ = RefreshAsync(names);
+    }
+
+    /// <summary>
+    /// Interroge chaque lampe connue. Les ampoules sur secteur répondent même
+    /// éteintes : elles restent alimentées, seul leur éclairage est coupé.
+    /// </summary>
+    private async Task RefreshAsync(IEnumerable<string> friendlyNames)
+    {
+        var wanted = new { state = "", brightness = "", color_temp = "", color = "" };
+
+        foreach (var name in friendlyNames)
+        {
+            if (!_deviceIdByFriendlyName.ContainsKey(name))
+            {
+                continue;
+            }
+
+            try
+            {
+                await PublishAsync($"{_mqtt.BaseTopic}/{name}/get", wanted, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                logger.LogDebug(ex, "Rafraîchissement de {Name} impossible.", name);
+            }
+        }
     }
 
     /// <summary>
@@ -396,7 +427,10 @@ public sealed class MqttLightService(
     }
 
     /// <summary>Publie une commande sur <c>zigbee2mqtt/&lt;nom&gt;/set</c>.</summary>
-    public async Task<bool> PublishSetAsync(string friendlyName, object payload, CancellationToken ct)
+    public Task<bool> PublishSetAsync(string friendlyName, object payload, CancellationToken ct) =>
+        PublishAsync($"{_mqtt.BaseTopic}/{friendlyName}/set", payload, ct);
+
+    private async Task<bool> PublishAsync(string topic, object payload, CancellationToken ct)
     {
         if (_client is null || !_client.IsConnected)
         {
@@ -404,7 +438,7 @@ public sealed class MqttLightService(
         }
 
         var message = new MqttApplicationMessageBuilder()
-            .WithTopic($"{_mqtt.BaseTopic}/{friendlyName}/set")
+            .WithTopic(topic)
             .WithPayload(JsonSerializer.Serialize(payload))
             .Build();
 

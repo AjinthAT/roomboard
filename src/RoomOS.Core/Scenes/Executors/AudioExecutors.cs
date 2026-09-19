@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 using RoomOS.Core.Agents;
 using RoomOS.Core.Audio;
 using RoomOS.Core.Hubs;
+using RoomOS.Core.State;
 using RoomOS.Domain.Contracts;
 
 namespace RoomOS.Core.Scenes.Executors;
@@ -9,6 +10,7 @@ namespace RoomOS.Core.Scenes.Executors;
 public sealed class AudioSetOutputExecutor(
     IServiceScopeFactory scopeFactory,
     AgentRegistry registry,
+    StateStore state,
     IHubContext<AgentHub> hub) : IStepExecutor
 {
     public string Type => SceneStepTypes.AudioSetOutput;
@@ -31,31 +33,46 @@ public sealed class AudioSetOutputExecutor(
             AgentProtocol.ToAgent.SetAudioOutput,
             new SetAudioOutputCommand(Guid.NewGuid().ToString("n"), windowsDeviceId),
             ct);
+
+        // L'agent republie l'état audio après bascule : on attend de le voir.
+        await StateWaiter.UntilAsync(() => state.GetAudio(pcId)?.ActiveOutputId == outputId, ct);
     }
 }
 
 public sealed class AudioSetVolumeExecutor(
-    AgentRegistry registry, IHubContext<AgentHub> hub) : IStepExecutor
+    AgentRegistry registry, StateStore state, IHubContext<AgentHub> hub) : IStepExecutor
 {
     public string Type => SceneStepTypes.AudioSetVolume;
 
-    public Task ExecuteAsync(SceneStep step, CancellationToken ct) =>
-        AudioCommand.SendAsync(
+    public async Task ExecuteAsync(SceneStep step, CancellationToken ct)
+    {
+        var level = step.Level ?? throw new InvalidOperationException("level manquant.");
+
+        await AudioCommand.SendAsync(
             registry, hub, step.DeviceId, AgentProtocol.ToAgent.SetVolume,
-            id => new SetVolumeCommand(id, step.Level ?? throw new InvalidOperationException("level manquant.")),
-            ct);
+            id => new SetVolumeCommand(id, level), ct);
+
+        // Windows arrondit le volume : un écart d'un point n'est pas un échec.
+        await StateWaiter.UntilAsync(
+            () => state.GetAudio(step.DeviceId!) is { } a && Math.Abs(a.Volume - level) <= 2, ct);
+    }
 }
 
 public sealed class AudioSetMuteExecutor(
-    AgentRegistry registry, IHubContext<AgentHub> hub) : IStepExecutor
+    AgentRegistry registry, StateStore state, IHubContext<AgentHub> hub) : IStepExecutor
 {
     public string Type => SceneStepTypes.AudioSetMute;
 
-    public Task ExecuteAsync(SceneStep step, CancellationToken ct) =>
-        AudioCommand.SendAsync(
+    public async Task ExecuteAsync(SceneStep step, CancellationToken ct)
+    {
+        var muted = step.Muted ?? throw new InvalidOperationException("muted manquant.");
+
+        await AudioCommand.SendAsync(
             registry, hub, step.DeviceId, AgentProtocol.ToAgent.SetMute,
-            id => new SetMuteCommand(id, step.Muted ?? throw new InvalidOperationException("muted manquant.")),
-            ct);
+            id => new SetMuteCommand(id, muted), ct);
+
+        await StateWaiter.UntilAsync(() => state.GetAudio(step.DeviceId!)?.Muted == muted, ct);
+    }
 }
 
 file static class AudioCommand

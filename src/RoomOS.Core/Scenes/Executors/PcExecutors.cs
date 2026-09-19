@@ -75,6 +75,10 @@ public sealed class PcShutdownExecutor(
             return;
         }
 
+        // Pas d'attente ici, contrairement aux autres étapes. Une extinction Windows
+        // prend dix à trente secondes, bien au-delà du délai par défaut d'une étape :
+        // attendre ferait échouer systématiquement une commande qui réussit. Le
+        // résultat observable arrive par la déconnexion du hub agent, que l'UI voit.
         await hub.Clients.Client(connectionId).SendAsync(
             AgentProtocol.ToAgent.Shutdown,
             new AgentCommand(Guid.NewGuid().ToString("n")),
