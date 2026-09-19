@@ -122,6 +122,13 @@ ou SLZB-06 (Ethernet, plus pratique si la VM est sur un hôte sans USB dédié).
 - **`coordinator_backup.json` contient la clé du réseau Zigbee.** Il est ignoré par
   git : le publier donnerait l'accès radio à quiconque est à portée. Il fait en
   revanche partie de ce qu'il faut sauvegarder.
+- **Une ampoule ne rend pas la couleur demandée.** Elle la ramène dans son gamut
+  physique. Mesuré sur une Philips Hue : `#FFD4A3` demandé ressort en (0,418 ; 0,375)
+  au lieu de (0,382 ; 0,380), et un vert dérive de 0,12 en coordonnées CIE. RoomOS
+  réaffiche ce que la lampe **émet**, pas ce qu'on lui a demandé — la pastille de
+  couleur dit donc la vérité, même quand elle ne correspond pas exactement au bouton
+  qu'on vient d'appuyer. C'est voulu : afficher l'intention masquerait le fait que
+  l'ampoule ne peut pas la satisfaire.
 - Le coordinateur SLZB-06 **ne répond pas au ping**. Pour le retrouver sur le réseau,
   interroger le mDNS (`slzb-06.local`) plutôt que balayer les adresses.
 - Payload de commande typique :
