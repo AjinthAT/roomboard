@@ -3,6 +3,8 @@ import { UnauthorizedError, identifyLight, setLight } from '../api/client';
 import type { LightCommand } from '../api/client';
 import type { LightSnapshot } from '../api/types';
 import { useRoom } from '../store/roomStore';
+import { ColorWheel } from './ColorWheel';
+import { useThrottledSend } from './useThrottledSend';
 
 export function LightsCard({ onUnauthorized }: { onUnauthorized: () => void }) {
   const lights = useRoom((s) => s.lights);
@@ -123,10 +125,14 @@ function BrightnessRow({
   usable: boolean;
   onSend: (id: string, command: LightCommand) => void;
 }) {
-  // Même compromis que le volume audio : le curseur suit le doigt, puis repasse
-  // sous contrôle du serveur dès qu'il le rejoint.
+  // La lampe suit le doigt, à cadence limitée. Le fondu est plus court que
+  // l'intervalle d'envoi : sinon les commandes se chevauchent et la lampe traîne
+  // derrière le geste.
   const [pending, setPending] = useState<number | null>(null);
   const serverValue = light.brightness ?? 0;
+
+  const throttled = useThrottledSend<number>((level) =>
+    onSend(light.id, { brightness: level, on: level > 0, transitionSec: 0.12 }));
 
   useEffect(() => {
     if (pending !== null && serverValue === pending) {
@@ -145,12 +151,13 @@ function BrightnessRow({
         value={shown}
         disabled={!usable}
         aria-label={`Luminosité ${light.name}`}
-        onChange={(event) => setPending(Number(event.currentTarget.value))}
-        onPointerUp={(event) => {
+        onChange={(event) => {
           const level = Number(event.currentTarget.value);
           setPending(level);
-          onSend(light.id, { brightness: level, on: level > 0, transitionSec: 0.3 });
+          throttled.push(level);
         }}
+        onPointerUp={(event) => throttled.commit(Number(event.currentTarget.value))}
+        onKeyUp={(event) => throttled.commit(Number(event.currentTarget.value))}
         className="h-11 flex-1 accent-neutral-300 disabled:opacity-40"
       />
       <span className="w-12 text-right text-sm tabular-nums text-neutral-400">{shown} %</span>
@@ -159,23 +166,16 @@ function BrightnessRow({
 }
 
 /**
- * Teintes prédéfinies plutôt qu'un sélecteur de couleur.
+ * Choix de la couleur à la roue.
  *
- * Un `input type="color"` ouvre une boîte de dialogue système : petites cibles,
- * deux gestes, comportement variable selon la version de Safari. Sur un panneau
- * mural on veut un appui sur une cible d'au moins 44 px (docs/07-frontend.md).
+ * Les huit pastilles d'origine étaient un compromis pour le tactile, et elles
+ * enfermaient l'utilisateur dans un bloc de teintes choisies d'avance. La roue donne
+ * tout le cercle, reste une cible large, et suit le doigt : la lampe change pendant
+ * le geste, pas seulement au relâchement.
+ *
+ * Les blancs ne sont pas sur la roue — ils relèvent du curseur de température, qui
+ * les rend exactement là où une approximation RVB dérive.
  */
-const PRESETS: ReadonlyArray<{ hex: string; label: string }> = [
-  { hex: '#FF4400', label: 'Orange' },
-  { hex: '#FF0000', label: 'Rouge' },
-  { hex: '#FF2E88', label: 'Rose' },
-  { hex: '#C04CFF', label: 'Violet' },
-  { hex: '#2F6BFF', label: 'Bleu' },
-  { hex: '#00C8D7', label: 'Cyan' },
-  { hex: '#27C46B', label: 'Vert' },
-  { hex: '#D7DB2A', label: 'Citron' },
-];
-
 function ColorRow({
   light,
   usable,
@@ -185,26 +185,16 @@ function ColorRow({
   usable: boolean;
   onSend: (id: string, command: LightCommand) => void;
 }) {
-  const current = light.colorHex?.toUpperCase() ?? null;
-
   return (
-    <div className="flex flex-wrap gap-2 pl-14">
-      {PRESETS.map((preset) => (
-        <button
-          key={preset.hex}
-          type="button"
-          title={preset.label}
-          aria-label={preset.label}
-          disabled={!usable}
-          onClick={() => onSend(light.id, { colorHex: preset.hex, on: true, transitionSec: 0.5 })}
-          className={`size-11 rounded-lg border-2 transition-colors disabled:opacity-40 ${
-            current !== null && isClose(current, preset.hex)
-              ? 'border-neutral-200'
-              : 'border-neutral-800'
-          }`}
-          style={{ background: preset.hex }}
-        />
-      ))}
+    <div className="flex flex-col items-center gap-3 py-2">
+      <ColorWheel
+        value={light.colorHex}
+        disabled={!usable}
+        onChange={(hex) => onSend(light.id, { colorHex: hex, on: true, transitionSec: 0.12 })}
+      />
+      <span className="text-xs tabular-nums text-neutral-600">
+        {light.colorHex ?? 'couleur inconnue'}
+      </span>
     </div>
   );
 }
@@ -228,6 +218,9 @@ function TemperatureRow({
   const [pending, setPending] = useState<number | null>(null);
   const serverValue = light.colorTempMired ?? Math.round((min + max) / 2);
 
+  const throttled = useThrottledSend<number>((mired) =>
+    onSend(light.id, { colorTempMired: mired, on: true, transitionSec: 0.12 }));
+
   useEffect(() => {
     if (pending !== null && serverValue === pending) {
       setPending(null);
@@ -248,12 +241,13 @@ function TemperatureRow({
           value={shown}
           disabled={!usable}
           aria-label="Température de blanc"
-          onChange={(event) => setPending(Number(event.currentTarget.value))}
-          onPointerUp={(event) => {
+          onChange={(event) => {
             const mired = Number(event.currentTarget.value);
             setPending(mired);
-            onSend(light.id, { colorTempMired: mired, on: true, transitionSec: 0.5 });
+            throttled.push(mired);
           }}
+          onPointerUp={(event) => throttled.commit(Number(event.currentTarget.value))}
+          onKeyUp={(event) => throttled.commit(Number(event.currentTarget.value))}
           className="h-11 flex-1"
           style={{
             accentColor: '#e8e8ea',
@@ -395,20 +389,4 @@ function Diagnostics({
       </button>
     </div>
   );
-}
-
-/**
- * Proximité RVB grossière : il s'agit de surligner une pastille, pas de mesurer.
- *
- * Le seuil est large à dessein. Une ampoule ne reproduit pas la couleur demandée :
- * elle la ramène dans son gamut physique, et RoomOS réaffiche ce qu'elle émet
- * vraiment. Mesuré sur une Philips Hue, l'écart atteint 116 sur cette échelle pour
- * un vert — un seuil serré ne surlignerait jamais la teinte qu'on vient de choisir.
- */
-function isClose(a: string, b: string): boolean {
-  const parse = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-  const [r1, g1, b1] = parse(a);
-  const [r2, g2, b2] = parse(b);
-
-  return Math.abs(r1 - r2) + Math.abs(g1 - g2) + Math.abs(b1 - b2) < 150;
 }

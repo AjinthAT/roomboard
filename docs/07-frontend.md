@@ -60,6 +60,13 @@ Une seule page. Pas de router. Grille 2×2 + barre de scènes.
   figée : sans hub, on ne sait pas, et le dire vaut mieux que le deviner.
 - Si un `POST` échoue, l'UI revient à l'état serveur. **Pas d'optimistic update**
   sur les actions physiques : un bouton qui ment est pire qu'un bouton lent.
+- **Les gestes continus font exception, à cadence limitée.** Curseurs et roue de
+  couleurs envoient pendant le geste, au plus une commande toutes les 160 ms, et
+  garantissent que la dernière valeur part au relâchement. N'envoyer qu'au
+  relâchement donnait une interface morte sous le doigt ; tout envoyer saturerait
+  le réseau Zigbee, qui encaisse quelques commandes par seconde et non soixante.
+  Mesuré à 6 commandes par seconde, sans perte. Le fondu est plus court que
+  l'intervalle, sinon les commandes se chevauchent et la lampe traîne.
 - **Confirmation en deux temps sur les actions irréversibles** : redémarrer, éteindre,
   et toute scène qui éteint un PC. Le bouton devient « Confirmer ? » et se désarme
   seul au bout de quelques secondes. Pas de fenêtre modale : sur un panneau mural,
