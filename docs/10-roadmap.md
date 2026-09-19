@@ -150,7 +150,7 @@ téléphone. À trancher avant M5, voir `09-integrations.md`.
 > qui rapporte un échec systématique finit par ne plus être lue. Les scènes seront
 > alignées sur le matériel réellement présent au moment de M5.
 
-- [ ] Achat coordinateur + ampoule Zigbee, appairage dans Z2M — **en attente de livraison**
+- [x] Achat coordinateur + ampoule Zigbee, appairage dans Z2M
 - [x] Mosquitto + Z2M dans le compose
 - [x] Souscription MQTT, on/off/luminosité/couleur
 - [x] Carte Lights dans l'UI
@@ -170,8 +170,16 @@ messages qu'il émettrait :
 - Validation : couleur malformée et luminosité hors bornes refusées en 400, lampe
   inconnue en 404, absence de jeton en 401.
 
-**Ce que la simulation ne prouve pas** : le délai de réponse sous la seconde, la
-portée radio, et le comportement réel de l'ampoule. Tout cela demande le matériel.
+Vérifié le 2026-09-19 **sur le matériel réel** :
+- SLZB-06 (CC2652P, cœur v2.9.8) en Ethernet, adresse statique, canal 15.
+- Philips Hue *white ambiance and color* appairée, nommée `desk_light`, vue par
+  RoomOS comme `desk-light`.
+- **Aller-retour complet mesuré entre 55 et 110 ms** — HTTP, Core, MQTT,
+  Zigbee2MQTT, radio, ampoule, et retour jusqu'à l'API. La DoD demandait moins
+  d'une seconde.
+
+Reste à éprouver :
+- [ ] L'état reste juste quand la lampe est pilotée par son interrupteur mural.
 
 ### Décisions prises pendant M4
 - **Mosquitto n'est publié que sur `127.0.0.1`.** Le Core l'atteint depuis le réseau

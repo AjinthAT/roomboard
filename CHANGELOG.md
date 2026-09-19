@@ -5,6 +5,23 @@ Toutes les évolutions notables de RoomOS. Une entrée par jalon de `docs/10-roa
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Le projet ne suit pas SemVer : il suit ses jalons.
 
+## M4 complété — appairage réel — 2026-09-19
+
+### Vérifié sur le matériel
+- SLZB-06 en Ethernet, cœur mis à jour en v2.9.8, adresse statique, canal 15.
+- Philips Hue *white ambiance and color* appairée et pilotée depuis RoomOS.
+- **Aller-retour complet de 55 à 110 ms**, de l'appel HTTP au retour d'état, en
+  passant par MQTT, Zigbee2MQTT et la radio. La DoD demandait moins d'une seconde.
+
+### Corrigé
+- **`coordinator_backup.json` n'était pas ignoré par git.** Il contient la clé du
+  réseau Zigbee : sur un dépôt public, le publier aurait donné l'accès radio à
+  quiconque se trouve à portée.
+
+### Appris
+- Zigbee2MQTT réécrit sa configuration au démarrage et supprime les commentaires.
+- Le SLZB-06 ne répond pas au ping : le mDNS est le seul moyen fiable de le trouver.
+
 ## M6 — Durcissement — 2026-09-19
 
 ### Ajouté
