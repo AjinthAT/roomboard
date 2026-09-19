@@ -94,6 +94,7 @@ function RoutineRow({
             <span className="block truncate text-neutral-300">{routine.name}</span>
             <span className="block truncate text-xs text-neutral-600">
               {routine.sceneName} · {summarise(routine.days)}
+              {routine.lastFired && ` · déclenchée à ${routine.lastFired}`}
             </span>
           </span>
           <span className="text-xl tabular-nums text-neutral-200">{routine.time}</span>

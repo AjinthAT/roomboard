@@ -200,6 +200,32 @@ public sealed class SceneEngineTests
         Assert.All(ids.Take(5), id => Assert.Null(engine.GetRun(id)));
     }
 
+    /// <summary>
+    /// Règle 5 de docs/03-architecture.md : une commande n'est réussie que lorsque
+    /// son effet est constaté. Un exécuteur qui attend un état qui n'arrive jamais
+    /// doit échouer au délai, pas réussir.
+    /// </summary>
+    [Fact]
+    public async Task Une_etape_qui_attend_un_effet_absent_echoue_au_delai()
+    {
+        var waiting = new FakeExecutor(SceneStepTypes.LightSet) { Delay = TimeSpan.FromSeconds(30) };
+        var after = new FakeExecutor(SceneStepTypes.AudioSetVolume);
+
+        var engine = NewEngine(waiting, after);
+
+        var run = await RunToEndAsync(engine, "work", new SceneDefinition([
+            new SceneStep(SceneStepTypes.LightSet, DeviceId: "desk-light", On: true),
+            new SceneStep(SceneStepTypes.AudioSetVolume, DeviceId: "gaming-pc", Level: 40),
+        ]));
+
+        // L'étape échoue sur le délai de 10 s, mais light.set n'est pas bloquante :
+        // la scène continue, et se termine en « completed » avec une étape en échec.
+        Assert.Equal(SceneStepStatus.Failed, run.Steps[0].Status);
+        Assert.Contains("Dépassement", run.Steps[0].Message);
+        Assert.Equal(SceneStepStatus.Completed, run.Steps[1].Status);
+        Assert.Single(after.Calls);
+    }
+
     [Fact]
     public async Task Un_type_sans_executeur_echoue_sans_faire_tomber_la_scene()
     {

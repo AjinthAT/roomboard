@@ -25,4 +25,3 @@ public sealed record RoutineInfo(
     /// <summary>Dernier déclenchement, heure locale. Vide si jamais déclenchée.</summary>
     string? LastFired);
 
-public sealed record RoutineFired(string RoutineId, string SceneId, string RunId);

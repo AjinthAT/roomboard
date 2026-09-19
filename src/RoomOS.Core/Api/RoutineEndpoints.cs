@@ -17,13 +17,15 @@ public static class RoutineEndpoints
         var group = app.MapGroup("/api/routines")
             .RequireAuthorization(TokenAuthenticationHandler.ClientPolicy);
 
-        group.MapGet("/", (RoomOsDbContext db, CancellationToken ct) => ListAsync(db, ct));
+        group.MapGet("/", (RoomOsDbContext db, RoutineScheduler scheduler, CancellationToken ct) =>
+            ListAsync(db, scheduler, ct));
         group.MapPut("/{id}", Save);
 
         return app;
     }
 
-    public static async Task<List<RoutineInfo>> ListAsync(RoomOsDbContext db, CancellationToken ct)
+    public static async Task<List<RoutineInfo>> ListAsync(
+        RoomOsDbContext db, RoutineScheduler scheduler, CancellationToken ct)
     {
         var routines = await db.Routines.AsNoTracking().OrderBy(r => r.SortOrder).ToListAsync(ct);
         var scenes = await db.Scenes.AsNoTracking().ToDictionaryAsync(s => s.Id, s => s.Name, ct);
@@ -36,7 +38,7 @@ public static class RoutineEndpoints
             $"{r.MinuteOfDay / 60:D2}:{r.MinuteOfDay % 60:D2}",
             [.. r.Days.Select(c => c == '1')],
             r.Enabled,
-            null))];
+            scheduler.LastFired(r.Id)?.ToString("HH:mm")))];
     }
 
     private static async Task<IResult> Save(

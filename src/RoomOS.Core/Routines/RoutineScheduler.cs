@@ -33,13 +33,16 @@ public sealed class RoutineScheduler(
     /// <summary>Assez fin pour une précision à la minute, assez lâche pour ne rien coûter.</summary>
     private static readonly TimeSpan Tick = TimeSpan.FromSeconds(20);
 
-    private readonly ConcurrentDictionary<string, DateOnly> _firedOn = new();
+    /// <summary>
+    /// Dernier déclenchement par routine, heure locale. Sert à deux choses : ne pas
+    /// rejouer une routine dans la même journée, et l'afficher à l'écran.
+    /// </summary>
+    private readonly ConcurrentDictionary<string, DateTimeOffset> _lastFired = new();
 
     private TimeZoneInfo? _zone;
 
-    public event Action<RoutineFiredEvent>? Fired;
-
-    public sealed record RoutineFiredEvent(string RoutineId, string SceneId, string RunId);
+    public DateTimeOffset? LastFired(string routineId) =>
+        _lastFired.TryGetValue(routineId, out var at) ? at : null;
 
     /// <summary>Heure locale courante, selon le fuseau configuré.</summary>
     public DateTimeOffset LocalNow()
@@ -107,12 +110,13 @@ public sealed class RoutineScheduler(
 
             // Une routine ne part qu'une fois par jour : le planificateur repasse
             // trois fois par minute.
-            if (_firedOn.TryGetValue(routine.Id, out var last) && last == today)
+            if (_lastFired.TryGetValue(routine.Id, out var last)
+                && DateOnly.FromDateTime(last.DateTime) == today)
             {
                 continue;
             }
 
-            _firedOn[routine.Id] = today;
+            _lastFired[routine.Id] = now;
 
             var scene = await db.Scenes.AsNoTracking()
                 .FirstOrDefaultAsync(s => s.Id == routine.SceneId, ct);
@@ -129,10 +133,8 @@ public sealed class RoutineScheduler(
                 var run = engine.Start(scene.Id, SceneDsl.Parse(scene.StepsJson));
 
                 logger.LogInformation(
-                    "Routine {Routine} déclenchée à {Time} : scène {Scene}.",
-                    routine.Id, now.ToString("HH:mm"), scene.Id);
-
-                Fired?.Invoke(new RoutineFiredEvent(routine.Id, scene.Id, run.RunId));
+                    "Routine {Routine} déclenchée à {Time} : scène {Scene} ({Run}).",
+                    routine.Id, now.ToString("HH:mm"), scene.Id, run.RunId);
             }
             catch (SceneDsl.InvalidSceneException ex)
             {
@@ -153,6 +155,9 @@ public sealed class RoutineScheduler(
         return days[index] == '1';
     }
 
-    /// <summary>Marque une routine comme déjà partie aujourd'hui, ou l'oublie.</summary>
-    public void Forget(string routineId) => _firedOn.TryRemove(routineId, out _);
+    /// <summary>
+    /// Oublie le dernier déclenchement. Appelé quand une routine est modifiée :
+    /// avancer l'heure d'une routine déjà partie aujourd'hui doit pouvoir la relancer.
+    /// </summary>
+    public void Forget(string routineId) => _lastFired.TryRemove(routineId, out _);
 }

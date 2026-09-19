@@ -28,10 +28,20 @@ Le projet ne suit pas SemVer : il suit ses jalons.
   avec la dernière valeur garantie au relâchement. Mesuré à 6 commandes par seconde
   sans perte.
 
-### Connu
-- Les exécuteurs de scènes marquent une étape réussie **dès l'envoi**, sans attendre
-  l'effet, alors que `03-architecture.md` règle 5 exige le contraire. Sans conséquence
-  observée : l'état réel revient par le hub en une centaine de millisecondes.
+### Corrigé à l'audit
+- **Les scènes annonçaient « appliquée » sans vérifier quoi que ce soit.** Les
+  exécuteurs marquaient une étape réussie dès l'envoi du message, alors que
+  `03-architecture.md` règle 5 exige un résultat observé. Un agent déconnecté, un
+  pont MQTT muet ou une ampoule hors de portée passaient pour des succès. Les étapes
+  lampe et audio attendent désormais l'effet dans le `StateStore`, et échouent au
+  délai sinon. L'extinction du PC fait exception, documentée : elle prend dix à
+  trente secondes, bien au-delà du délai d'une étape.
+- **Après un redémarrage du Core, l'état des lampes restait inconnu** jusqu'à ce que
+  quelqu'un touche l'interrupteur — RoomOS affichait éteinte une lampe allumée.
+  Zigbee2MQTT ne republie qu'au changement ; le Core interroge maintenant chaque
+  lampe au démarrage.
+- Un événement `Fired` déclaré et jamais écouté, et un champ `LastFired` toujours
+  nul. L'événement est supprimé, le champ est renseigné et affiché.
 
 ## Module lampes étendu — 2026-09-19
 

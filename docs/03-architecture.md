@@ -80,6 +80,16 @@ Toute commande (`shutdown`, `setOutput`, `wake`) a un timeout explicite et un r�
 observable. Le Core ne suppose jamais qu'une commande a réussi : il attend le changement
 d'état correspondant, ou il échoue.
 
+> **Appliqué aux scènes depuis le 2026-09-19.** Les étapes lampe et audio attendent
+> l'effet dans le `StateStore` avant de se déclarer réussies. Auparavant elles ne
+> vérifiaient que l'envoi, si bien qu'une scène annonçait « appliquée » avec un agent
+> déconnecté ou une ampoule hors de portée.
+>
+> **Une exception, assumée** : `pc.shutdown` n'attend pas. Une extinction Windows
+> prend dix à trente secondes, bien au-delà du délai par défaut d'une étape ; attendre
+> ferait échouer systématiquement une commande qui réussit. Le résultat observable
+> arrive par la déconnexion du hub agent, que l'UI voit.
+
 ## Projets / composants
 
 | Composant | Type | Responsabilité |

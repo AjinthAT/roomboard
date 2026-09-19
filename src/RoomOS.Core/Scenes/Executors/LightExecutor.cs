@@ -3,12 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using RoomOS.Core.Data;
 using RoomOS.Core.Data.Entities;
 using RoomOS.Core.Integrations.Mqtt;
+using RoomOS.Core.State;
 using RoomOS.Domain.Contracts;
 
 namespace RoomOS.Core.Scenes.Executors;
 
 public sealed class LightSetExecutor(
-    IServiceScopeFactory scopeFactory, MqttLightService mqtt) : IStepExecutor
+    IServiceScopeFactory scopeFactory, MqttLightService mqtt, StateStore state) : IStepExecutor
 {
     public string Type => SceneStepTypes.LightSet;
 
@@ -72,6 +73,16 @@ public sealed class LightSetExecutor(
         if (!await mqtt.PublishSetAsync(config.Z2mFriendlyName, payload, ct))
         {
             throw new InvalidOperationException("Le pont MQTT n'est pas connecté.");
+        }
+
+        // La lampe republie son état après exécution : on l'attend, sinon l'étape
+        // réussirait même sans ampoule au bout (docs/03-architecture.md, règle 5).
+        // Seul l'allumage est vérifié : la luminosité et la couleur arrivent par
+        // paliers pendant un fondu, et les comparer exactement ferait échouer une
+        // étape parfaitement appliquée.
+        if (step.On is { } expected)
+        {
+            await StateWaiter.UntilAsync(() => state.GetLight(id)?.On == expected, ct);
         }
     }
 }
