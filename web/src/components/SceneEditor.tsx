@@ -133,7 +133,7 @@ export function SceneEditor({
         }
       }}
     >
-      <div className="flex max-h-full w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-t-3xl border border-neutral-800 bg-neutral-950 p-6 sm:rounded-3xl">
+      <div className="flex max-h-full w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-t-3xl border border-neutral-800 bg-neutral-950 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:rounded-3xl sm:p-6">
         <header className="flex items-center justify-between gap-3">
           <input
             value={name}

@@ -1,0 +1,13 @@
+[Unit]
+Description=Sauvegarde nocturne de RoomOS
+
+[Timer]
+# 4 h 12 : aucune routine n'est réglée à cette minute-là, et le Core s'arrête deux
+# secondes pendant la copie.
+OnCalendar=*-*-* 04:12:00
+# La VM n'est pas forcément allumée à 4 h : rattraper au démarrage plutôt que sauter
+# un jour en silence.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

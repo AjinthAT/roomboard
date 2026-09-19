@@ -15,7 +15,7 @@ export function PcCard({ onUnauthorized }: { onUnauthorized: () => void }) {
   }
 
   return (
-    <section className="flex flex-col gap-5 rounded-2xl border border-neutral-800 bg-neutral-950 p-6">
+    <section className="flex flex-col gap-5 rounded-2xl border border-neutral-800 bg-neutral-950 p-4 sm:p-6">
       <header className="flex items-baseline justify-between">
         <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">{name}</h2>
         <StatusLine online={online} />

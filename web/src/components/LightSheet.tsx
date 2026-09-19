@@ -60,7 +60,7 @@ export function LightSheet({
         }
       }}
     >
-      <div className="flex max-h-full w-full max-w-md flex-col gap-5 overflow-y-auto rounded-t-3xl border border-neutral-800 bg-neutral-950 p-6 sm:rounded-3xl">
+      <div className="flex max-h-full w-full max-w-md flex-col gap-5 overflow-y-auto rounded-t-3xl border border-neutral-800 bg-neutral-950 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:rounded-3xl sm:p-6">
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span

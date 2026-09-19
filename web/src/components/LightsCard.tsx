@@ -28,7 +28,7 @@ export function LightsCard({ onUnauthorized }: { onUnauthorized: () => void }) {
   const open = lights.find((l) => l.id === openId) ?? null;
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-neutral-800 bg-neutral-950 p-6">
+    <section className="flex flex-col gap-4 rounded-2xl border border-neutral-800 bg-neutral-950 p-4 sm:p-6">
       <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Lumières</h2>
 
       {lights.length === 0 ? (

@@ -12,6 +12,13 @@ body,
 
 body {
   margin: 0;
+  /* L'app tourne en plein écran (PWA installée, barre d'état translucide) : sans
+     ces marges, l'heure du système recouvre l'en-tête et la barre de geste mange
+     la dernière ligne. `viewport-fit=cover` dans index.html les rend disponibles. */
+  box-sizing: border-box;
+  padding:
+    env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
   background: #0a0a0b;
   color: #e8e8ea;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;

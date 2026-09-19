@@ -224,6 +224,32 @@ L'état à sauvegarder tient en deux éléments :
 fichiers pendant qu'il écrit peut produire un instantané incohérent, qui ne se
 révélera qu'au moment où on en aura besoin.
 
+### Sauvegarde automatique
+
+`deploy/backup.sh` fait tout cela et garde les quatorze dernières copies dans
+`~/backups/roomos` (réglable par `ROOMOS_BACKUP_DIR` et `ROOMOS_BACKUP_KEEP`). Un
+timer systemd le déclenche à 4 h 12 :
+
+```bash
+sudo cp ~/roomboard/deploy/systemd/roomos-backup.* /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now roomos-backup.timer
+
+systemctl list-timers roomos-backup.timer   # prochaine échéance
+sudo systemctl start roomos-backup.service  # déclencher tout de suite
+journalctl -u roomos-backup.service -n 20   # ce qu'elle a fait
+```
+
+`Persistent=true` : si la VM était éteinte à 4 h 12, la sauvegarde part au démarrage
+suivant au lieu de sauter un jour en silence.
+
+> **Ces archives ne quittent pas la VM.** Une sauvegarde qui vit sur le disque
+> qu'elle protège ne protège de rien d'autre que d'une fausse manœuvre. Copier
+> `~/backups/roomos` ailleurs de temps en temps, et surtout garder `.env`
+> hors machine : il contient l'adresse MAC, sans laquelle le Wake-on-LAN est perdu.
+
+### À la main
+
 ```bash
 cd ~/roomboard/deploy
 

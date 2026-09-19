@@ -52,7 +52,7 @@ export function RoutinesCard({ onUnauthorized }: { onUnauthorized: () => void })
   }
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-neutral-800 bg-neutral-950 p-6">
+    <section className="flex flex-col gap-4 rounded-2xl border border-neutral-800 bg-neutral-950 p-4 sm:p-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Routines</h2>
         <button
@@ -233,7 +233,7 @@ function RoutineRow({
 
           <div className="flex flex-col gap-2">
             <span className="text-xs uppercase tracking-wider text-neutral-600">Jours</span>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5 sm:gap-2">
               {DAYS.map((label, index) => (
                 <button
                   key={index}
@@ -245,7 +245,7 @@ function RoutineRow({
                     days[index] = !days[index];
                     onSave(routine.id, { days });
                   }}
-                  className={`size-11 flex-1 rounded-lg border text-sm transition-colors disabled:opacity-40 ${
+                  className={`h-11 min-w-0 flex-1 rounded-lg border text-sm transition-colors disabled:opacity-40 ${
                     routine.days[index]
                       ? 'border-neutral-500 bg-neutral-800 text-neutral-100'
                       : 'border-neutral-800 bg-neutral-900 text-neutral-600'

@@ -5,6 +5,31 @@ Toutes les évolutions notables de RoomOS. Une entrée par jalon de `docs/10-roa
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Le projet ne suit pas SemVer : il suit ses jalons.
 
+## Sauvegarde automatique et passe responsive — 2026-09-19
+
+### Ajouté
+- **Sauvegarde nocturne** (`deploy/backup.sh` + timer systemd, 4 h 12, quatorze
+  copies). La procédure existait et était éprouvée, mais rien ne la déclenchait :
+  un disque perdu emportait l'autorisation Spotify, les scènes et les routines. Le
+  Core s'arrête deux secondes le temps de la copie — SQLite est en WAL, copier à
+  chaud donne une archive qui ne se révèle inutilisable qu'au moment de restaurer.
+  `Persistent=true` rattrape la nuit où la VM était éteinte. Vérifié : archive
+  produite, extraite ailleurs, base relue — quatre scènes, deux routines, jeton
+  Spotify présent.
+- **Bouton plein écran**, affiché seulement là où il sert : pas dans une app déjà
+  installée sur l'écran d'accueil, pas sur Safari iPad qui n'expose pas l'API.
+
+### Modifié
+- **Passe responsive.** L'iPad reste la cible, mais le téléphone servait aussi :
+  gouttières de 16 px au lieu de 24 sur petit écran, cartes et boîtes de dialogue
+  idem, sélecteur de jours resserré pour garder sept boutons de 44 px de haut sur
+  une largeur de téléphone.
+- **Zones sûres respectées** (`env(safe-area-inset-*)`). En plein écran avec la barre
+  d'état translucide, l'heure du système recouvrait l'en-tête et la barre de geste
+  mangeait la dernière ligne.
+- **Orientation libre dans le manifest**, au lieu de « landscape ». iOS ignore ce
+  champ, Android non : le téléphone installé était forcé en paysage.
+
 ## Éditeur de scènes et Spotify approfondi — 2026-09-19
 
 ### Ajouté
