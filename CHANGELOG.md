@@ -5,6 +5,39 @@ Toutes les évolutions notables de RoomOS. Une entrée par jalon de `docs/10-roa
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Le projet ne suit pas SemVer : il suit ses jalons.
 
+## Module lampes étendu — 2026-09-19
+
+Le périmètre V1 se limitait à « on/off, luminosité, couleur ». L'ampoule appairée en
+expose bien davantage, et tout a été ajouté sur décision explicite.
+
+### Ajouté
+- **Température de blanc** (154 à 455 mireds). La mesure justifie l'ajout : une
+  température demandée est reproduite **exactement**, là où une couleur RVB dérive
+  dans le gamut de l'ampoule. Les scènes Work et Chill l'utilisent désormais.
+- **Fondus** (`transitionSec`), jusqu'à 60 s. Night éteint en cinq secondes.
+- **Effets** Philips — bougie, cheminée, aurore, sous-marin, et treize autres.
+- **Comportement au rallumage mural** : éteinte, allumée, inverser, état précédent.
+- **Identification** : fait clignoter une lampe, pour savoir laquelle est laquelle.
+- **Qualité du lien radio** dans `/metrics`, où Grafana l'attendait.
+- **Les capacités sont déduites de l'inventaire Zigbee2MQTT**, pas déclarées en
+  configuration : l'interface s'adapte à chaque ampoule appairée.
+
+### Décidé
+- **Les réglages secondaires sont repliés** derrière un bouton. Tout est accessible,
+  mais `07-frontend.md` demande un écran lisible en moins de deux secondes, et vingt
+  effets à plat l'auraient rendu illisible. J'avais recommandé d'écarter les effets ;
+  la décision de tout inclure a été prise en connaissance de cause.
+- **Couleur et température s'excluent** dans une même commande : une lampe est dans
+  l'un ou l'autre mode, et envoyer les deux laisserait le hasard trancher.
+
+### Corrigé
+- **« Appairée » se déduisait de la réception d'un message** depuis le démarrage du
+  Core. Une lampe appairée mais immobile s'affichait donc « pas encore appairée »
+  après chaque redémarrage, et une lampe ayant quitté le réseau restait affichée
+  comme présente. La source est maintenant l'inventaire publié par Zigbee2MQTT.
+- **La disponibilité n'était pas activée** dans Zigbee2MQTT : `reachable` ne pouvait
+  pas être juste.
+
 ## M4 complété — appairage réel — 2026-09-19
 
 ### Vérifié sur le matériel

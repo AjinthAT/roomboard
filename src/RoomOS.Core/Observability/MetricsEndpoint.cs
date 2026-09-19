@@ -66,6 +66,14 @@ public static class MetricsEndpoint
                 Gauge(sb, "roomos_light_brightness_percent", "Luminosité",
                     brightness, ("light", deviceId));
             }
+
+            // Qualité du lien radio : trop instable pour l'écran, précieuse sur un
+            // graphique. C'est exactement ce que Prometheus sait faire et pas le hub.
+            if (light.LinkQuality is { } lqi)
+            {
+                Gauge(sb, "roomos_light_link_quality", "Qualité du lien Zigbee, 0 à 255",
+                    lqi, ("light", deviceId));
+            }
         }
 
         Gauge(sb, "roomos_music_playing", "Lecture Spotify en cours",

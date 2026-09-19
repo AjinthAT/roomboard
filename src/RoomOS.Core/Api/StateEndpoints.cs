@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using RoomOS.Core.Auth;
 using RoomOS.Core.Data;
 using RoomOS.Core.Data.Entities;
+using RoomOS.Core.Integrations.Mqtt;
 using RoomOS.Core.State;
 using RoomOS.Domain.Contracts;
 
@@ -26,6 +27,7 @@ public static class StateEndpoints
     private static async Task<IResult> GetState(
         RoomOsDbContext db,
         StateStore state,
+        MqttLightService mqtt,
         TimeProvider time,
         CancellationToken ct)
     {
@@ -60,7 +62,7 @@ public static class StateEndpoints
                     current.Telemetry);
             })],
             pcs.ToDictionary(pc => pc.Id, pc => BuildAudio(pc.Id, state, outputsByPc)),
-            await LightEndpoints.BuildSnapshotsAsync(db, state, ct),
+            await LightEndpoints.BuildSnapshotsAsync(db, state, mqtt, ct),
             state.Music,
             await SceneEndpoints.ListAsync(db, ct),
             time.GetUtcNow());

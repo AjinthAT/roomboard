@@ -29,7 +29,8 @@ L'agent utilise un token distinct (`ROOMOS__AgentToken`).
 | PUT | `/api/audio/{pcId}/volume` | `{ "level": 60 }` (0–100) |
 | PUT | `/api/audio/{pcId}/mute` | `{ "muted": true }` |
 | GET | `/api/lights` | Liste + états |
-| PUT | `/api/lights/{id}` | `{ "on": true, "brightness": 40, "colorHex": "#FF6A00" }` |
+| PUT | `/api/lights/{id}` | `{ "on": true, "brightness": 40, "colorHex": "#FF6A00", "colorTempMired": 300, "effect": "candle", "powerOnBehavior": "previous", "transitionSec": 1.5 }` — tous facultatifs |
+| POST | `/api/lights/{id}/identify` | Fait clignoter la lampe, pour l'identifier |
 | GET | `/api/music/now-playing` | `NowPlaying` |
 | GET | `/api/music/devices` | Appareils Spotify visibles, pour renseigner `PcDeviceHint` |
 | POST | `/api/music/transfer` | `{ "deviceId": "..." }` — bascule la lecture sur un appareil |

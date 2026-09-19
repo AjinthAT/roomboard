@@ -130,7 +130,7 @@ class RoomStore {
     });
   }
 
-  setLight(id: string, patch: Omit<LightStateChanged, 'id'>): void {
+  setLight(id: string, patch: Partial<Omit<LightStateChanged, 'id'>>): void {
     const index = this.state.lights.findIndex((l) => l.id === id);
 
     if (index === -1) {

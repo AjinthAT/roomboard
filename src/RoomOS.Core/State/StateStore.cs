@@ -67,6 +67,20 @@ public sealed class StateStore
     public LightState? GetLight(string deviceId) =>
         _lights.TryGetValue(deviceId, out var light) ? light : null;
 
+    /// <summary>
+    /// Oublie une lampe : elle a quitté le réseau Zigbee. Garder son dernier état
+    /// afficherait une lampe qui n'existe plus comme si elle répondait encore.
+    /// </summary>
+    public void ForgetLight(string deviceId)
+    {
+        if (!_lights.TryRemove(deviceId, out _))
+        {
+            return;
+        }
+
+        LightStateChanged?.Invoke(new LightStateChanged(deviceId, false, null, null, false, null, null, null));
+    }
+
     public void SetLight(string deviceId, LightState light)
     {
         var previous = GetLight(deviceId);
@@ -78,13 +92,18 @@ public sealed class StateStore
             && previous.On == light.On
             && previous.Brightness == light.Brightness
             && previous.ColorHex == light.ColorHex
-            && previous.Reachable == light.Reachable)
+            && previous.Reachable == light.Reachable
+            && previous.ColorTempMired == light.ColorTempMired
+            && previous.PowerOnBehavior == light.PowerOnBehavior)
         {
+            // La qualité du lien bouge en permanence sans intérêt pour l'écran :
+            // elle n'est pas une raison de diffuser. Prometheus la lira au sondage.
             return;
         }
 
         LightStateChanged?.Invoke(new LightStateChanged(
-            deviceId, light.On, light.Brightness, light.ColorHex, light.Reachable));
+            deviceId, light.On, light.Brightness, light.ColorHex, light.Reachable,
+            light.ColorTempMired, light.LinkQuality, light.PowerOnBehavior));
     }
 
     private MusicState _music = new(MusicLinkState.NotLinked, NowPlaying.Nothing);

@@ -70,7 +70,16 @@ export type LightCommand = {
   on?: boolean;
   brightness?: number;
   colorHex?: string;
+  colorTempMired?: number;
+  effect?: string;
+  powerOnBehavior?: string;
+  /** Durée du fondu en secondes. Appliquée à toute la commande par Zigbee2MQTT. */
+  transitionSec?: number;
 };
+
+export function identifyLight(id: string): Promise<unknown> {
+  return request(`/api/lights/${encodeURIComponent(id)}/identify`, { method: 'POST' });
+}
 
 export function setLight(id: string, command: LightCommand): Promise<unknown> {
   return request(`/api/lights/${encodeURIComponent(id)}`, {

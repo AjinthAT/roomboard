@@ -10,6 +10,13 @@ frontend:
   port: 8080
 homeassistant:
   enabled: false
+availability:
+  enabled: true
+  active:
+    timeout: 10
+  passive:
+    timeout: 1500
+
 advanced:
   log_level: info
   channel: 15

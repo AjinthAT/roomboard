@@ -32,6 +32,10 @@ de contrôle, accessible en moins de deux secondes depuis un écran fixe.
 
 ### Lumières
 - On/off, luminosité, couleur si l'ampoule le permet
+- **Étendu après M6** : température de blanc, fondus, effets, comportement au
+  rallumage mural, identification, qualité du lien radio. Les capacités sont déduites
+  de l'inventaire Zigbee2MQTT, donc l'interface s'adapte à chaque ampoule appairée
+  sans configuration.
 
 ### Musique
 - Morceau en cours, pochette, artiste

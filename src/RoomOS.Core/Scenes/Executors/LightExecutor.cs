@@ -48,9 +48,25 @@ public sealed class LightSetExecutor(
             payload["color"] = new { hex };
         }
 
+        // Exclusive de la couleur : une lampe est dans l'un ou l'autre mode.
+        if (step.ColorTempMired is { } mired && step.ColorHex is null)
+        {
+            payload["color_temp"] = mired;
+        }
+
+        if (step.Effect is { } effect)
+        {
+            payload["effect"] = effect;
+        }
+
         if (payload.Count == 0)
         {
             return;
+        }
+
+        if (step.TransitionSec is { } transition and >= 0 and <= 60)
+        {
+            payload["transition"] = transition;
         }
 
         if (!await mqtt.PublishSetAsync(config.Z2mFriendlyName, payload, ct))
