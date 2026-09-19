@@ -11,7 +11,14 @@ namespace RoomOS.Core.Api;
 
 public static class LightEndpoints
 {
-    public sealed record SetLightRequest(bool? On, int? Brightness, string? ColorHex);
+    public sealed record SetLightRequest(
+        bool? On,
+        int? Brightness,
+        string? ColorHex,
+        int? ColorTempMired,
+        string? Effect,
+        string? PowerOnBehavior,
+        double? TransitionSec);
 
     public static IEndpointRouteBuilder MapLightEndpoints(this IEndpointRouteBuilder app)
     {
@@ -20,13 +27,14 @@ public static class LightEndpoints
 
         group.MapGet("/", GetLights);
         group.MapPut("/{id}", SetLight);
+        group.MapPost("/{id}/identify", Identify);
 
         return app;
     }
 
     private static async Task<IResult> GetLights(
-        RoomOsDbContext db, StateStore state, CancellationToken ct) =>
-        Results.Ok(await BuildSnapshotsAsync(db, state, ct));
+        RoomOsDbContext db, StateStore state, MqttLightService mqtt, CancellationToken ct) =>
+        Results.Ok(await BuildSnapshotsAsync(db, state, mqtt, ct));
 
     /// <summary>
     /// Construit la liste des lampes. Partagé avec <c>GET /api/state</c> : les lampes
@@ -34,7 +42,7 @@ public static class LightEndpoints
     /// injoignables — sinon la carte serait vide au démarrage.
     /// </summary>
     public static async Task<List<LightSnapshot>> BuildSnapshotsAsync(
-        RoomOsDbContext db, StateStore state, CancellationToken ct)
+        RoomOsDbContext db, StateStore state, MqttLightService mqtt, CancellationToken ct)
     {
         var devices = await db.Devices.AsNoTracking()
             .Where(d => d.Kind == DeviceKind.Light && d.Enabled)
@@ -46,6 +54,24 @@ public static class LightEndpoints
             var config = JsonSerializer.Deserialize<LightConfig>(device.ConfigJson);
             var live = state.GetLight(device.Id);
 
+            // « Appairée » vient de l'inventaire publié par Zigbee2MQTT, pas de la
+            // réception d'un message : une lampe appairée mais immobile depuis le
+            // démarrage du Core est bien appairée, et une lampe partie ne l'est plus.
+            var paired = config is not null && mqtt.IsPaired(config.Z2mFriendlyName);
+
+            // Les capacités viennent de l'inventaire Zigbee. La configuration ne sert
+            // que de repli avant sa réception, et pour une lampe jamais vue.
+            var caps = config is null ? LightCapabilities.None : mqtt.GetCapabilities(config.Z2mFriendlyName);
+
+            if (!paired)
+            {
+                caps = caps with
+                {
+                    Brightness = config?.SupportsBrightness ?? true,
+                    Color = config?.SupportsColor ?? false,
+                };
+            }
+
             return new LightSnapshot(
                 device.Id,
                 device.Name,
@@ -53,10 +79,42 @@ public static class LightEndpoints
                 live?.Brightness,
                 live?.ColorHex,
                 live?.Reachable ?? false,
-                Paired: live is not null,
-                config?.SupportsColor ?? false,
-                config?.SupportsBrightness ?? true);
+                Paired: paired,
+                live?.ColorTempMired,
+                live?.LinkQuality,
+                live?.PowerOnBehavior,
+                caps);
         })];
+    }
+
+    /// <summary>
+    /// Fait clignoter la lampe. Sans usage avec une seule ampoule, indispensable
+    /// pour savoir laquelle est laquelle dès qu'il y en a plusieurs.
+    /// </summary>
+    private static async Task<IResult> Identify(
+        string id, RoomOsDbContext db, MqttLightService mqtt, CancellationToken ct)
+    {
+        var name = await FriendlyNameAsync(id, db, ct);
+
+        if (name is null)
+        {
+            return Results.NotFound(new { message = $"Lampe « {id} » inconnue." });
+        }
+
+        return await mqtt.PublishSetAsync(name, new { effect = "blink" }, ct)
+            ? Results.Accepted()
+            : Results.Conflict(new { message = "Le pont MQTT n'est pas connecté." });
+    }
+
+    private static async Task<string?> FriendlyNameAsync(
+        string id, RoomOsDbContext db, CancellationToken ct)
+    {
+        var device = await db.Devices.AsNoTracking()
+            .FirstOrDefaultAsync(d => d.Id == id && d.Kind == DeviceKind.Light, ct);
+
+        return device is null
+            ? null
+            : JsonSerializer.Deserialize<LightConfig>(device.ConfigJson)?.Z2mFriendlyName;
     }
 
     private static async Task<IResult> SetLight(
@@ -75,6 +133,11 @@ public static class LightEndpoints
         {
             // Z2M ignore silencieusement une couleur malformée : mieux vaut refuser ici.
             return Results.BadRequest(new { message = "La couleur doit être au format #RRGGBB." });
+        }
+
+        if (request.ColorTempMired is < 100 or > 600)
+        {
+            return Results.BadRequest(new { message = "La température va de 100 à 600 mireds." });
         }
 
         var device = await db.Devices.AsNoTracking()
@@ -109,9 +172,32 @@ public static class LightEndpoints
             payload["color"] = new { hex };
         }
 
+        // Couleur et température s'excluent : une lampe est dans l'un ou l'autre mode.
+        // Envoyer les deux laisserait le dernier arrivé gagner, de façon imprévisible.
+        if (request.ColorTempMired is { } mired && request.ColorHex is null)
+        {
+            payload["color_temp"] = mired;
+        }
+
+        if (request.Effect is { } effect)
+        {
+            payload["effect"] = effect;
+        }
+
+        if (request.PowerOnBehavior is { } behaviour)
+        {
+            payload["power_on_behavior"] = behaviour;
+        }
+
         if (payload.Count == 0)
         {
             return Results.BadRequest(new { message = "Rien à changer." });
+        }
+
+        // Durée de fondu, en secondes. Z2M l'applique à l'ensemble de la commande.
+        if (request.TransitionSec is { } transition and >= 0 and <= 60)
+        {
+            payload["transition"] = transition;
         }
 
         // Pas de mise à jour optimiste : l'état affiché viendra du message que

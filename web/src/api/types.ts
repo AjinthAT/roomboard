@@ -66,6 +66,17 @@ export type Playlist = {
   uri: string;
 };
 
+/** Capacités déduites de l'inventaire Zigbee : l'UI s'adapte à chaque ampoule. */
+export type LightCapabilities = {
+  brightness: boolean;
+  color: boolean;
+  colorTemp: boolean;
+  colorTempMin: number | null;
+  colorTempMax: number | null;
+  effects: string[];
+  powerOnBehaviours: string[];
+};
+
 export type LightSnapshot = {
   id: string;
   name: string;
@@ -74,10 +85,13 @@ export type LightSnapshot = {
   colorHex: string | null;
   /** Faux quand Zigbee2MQTT signale la lampe injoignable, coupée au mur par exemple. */
   reachable: boolean;
-  /** Faux tant que Zigbee2MQTT n'a jamais parlé de cette lampe : elle n'est pas appairée. */
+  /** Faux tant que la lampe n'est pas dans l'inventaire Zigbee : elle n'est pas appairée. */
   paired: boolean;
-  supportsColor: boolean;
-  supportsBrightness: boolean;
+  /** Température de blanc en mireds. Plus la valeur est basse, plus c'est froid. */
+  colorTempMired: number | null;
+  linkQuality: number | null;
+  powerOnBehavior: string | null;
+  capabilities: LightCapabilities;
 };
 
 export type SceneInfo = {
@@ -124,6 +138,9 @@ export type LightStateChanged = {
   brightness: number | null;
   colorHex: string | null;
   reachable: boolean;
+  colorTempMired: number | null;
+  linkQuality: number | null;
+  powerOnBehavior: string | null;
 };
 
 export type NowPlayingChanged = {

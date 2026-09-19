@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using RoomOS.Core.Data;
+using RoomOS.Core.Json;
 using RoomOS.Domain.Contracts;
 
 namespace RoomOS.Core.Integrations.Spotify;
@@ -256,17 +257,4 @@ public sealed class SpotifyMusicProvider(
             .Select(i => i.GetPropertyOrNull("url")?.GetString())
             .FirstOrDefault(url => url is not null);
     }
-}
-
-file static class JsonElementExtensions
-{
-    public static JsonElement? GetPropertyOrNull(this JsonElement element, string name) =>
-        element.ValueKind == JsonValueKind.Object &&
-        element.TryGetProperty(name, out var value) &&
-        value.ValueKind is not JsonValueKind.Null
-            ? value
-            : null;
-
-    public static JsonElement? GetPropertyOrNull(this JsonElement? element, string name) =>
-        element?.GetPropertyOrNull(name);
 }

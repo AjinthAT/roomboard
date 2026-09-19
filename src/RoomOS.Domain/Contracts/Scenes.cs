@@ -20,7 +20,13 @@ public sealed record SceneStep(
     string? Uri = null,
     int? Ms = null,
     bool WaitForOnline = false,
-    int? TimeoutSec = null);
+    int? TimeoutSec = null,
+    /// <summary>Température de blanc en mireds, exclusive de <c>ColorHex</c>.</summary>
+    int? ColorTempMired = null,
+    /// <summary>Effet Philips, pour les ampoules qui en exposent.</summary>
+    string? Effect = null,
+    /// <summary>Durée du fondu, en secondes. Une scène qui claque fait sursauter.</summary>
+    double? TransitionSec = null);
 
 /// <summary>Types d'étapes reconnus. Pas de condition, pas de boucle, pas de branche.</summary>
 public static class SceneStepTypes

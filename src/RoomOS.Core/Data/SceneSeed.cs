@@ -41,14 +41,14 @@ public static class SceneSeed
                 new(SceneStepTypes.PcWake, DeviceId: pc, WaitForOnline: true, TimeoutSec: 90),
                 new(SceneStepTypes.AudioSetOutput, DeviceId: pc, OutputId: jbl),
                 new(SceneStepTypes.AudioSetVolume, DeviceId: pc, Level: 40),
-                .. Light(desk, on: true, brightness: 100, color: "#F2F6FF"),
-                .. Light(ambient, on: false),
+                .. Light(desk, on: true, brightness: 100, mired: 160, transition: 1),
+                .. Light(ambient, on: false, transition: 1),
             ]),
 
             ("chill", "Chill", "sofa",
             [
-                .. Light(desk, on: true, brightness: 30, color: "#FFB070"),
-                .. Light(ambient, on: true, brightness: 60, color: "#FFB070"),
+                .. Light(desk, on: true, brightness: 30, mired: 450, transition: 3),
+                .. Light(ambient, on: true, brightness: 60, mired: 450, transition: 3),
                 new(SceneStepTypes.AudioSetOutput, DeviceId: pc, OutputId: jbl),
                 new(SceneStepTypes.AudioSetVolume, DeviceId: pc, Level: 35),
                 new(SceneStepTypes.MusicTransfer),
@@ -60,8 +60,8 @@ public static class SceneSeed
                 new(SceneStepTypes.PcWake, DeviceId: pc, WaitForOnline: true, TimeoutSec: 90),
                 new(SceneStepTypes.AudioSetOutput, DeviceId: pc, OutputId: headset),
                 new(SceneStepTypes.AudioSetVolume, DeviceId: pc, Level: 60),
-                .. Light(desk, on: true, brightness: 20, color: "#FF4400"),
-                .. Light(ambient, on: false),
+                .. Light(desk, on: true, brightness: 20, color: "#FF4400", transition: 1),
+                .. Light(ambient, on: false, transition: 1),
                 new(SceneStepTypes.MusicTransfer),
             ]),
 
@@ -70,8 +70,9 @@ public static class SceneSeed
             ("night", "Night", "moon",
             [
                 new(SceneStepTypes.MusicPause),
-                .. Light(desk, on: false),
-                .. Light(ambient, on: false),
+                // Fondu long : la lampe s'éteint doucement plutôt que de claquer.
+                .. Light(desk, on: false, transition: 5),
+                .. Light(ambient, on: false, transition: 5),
                 new(SceneStepTypes.PcShutdown, DeviceId: pc),
             ]),
         };
@@ -106,8 +107,19 @@ public static class SceneSeed
     }
 
     /// <summary>Zéro ou une étape : une lampe non déclarée n'apparaît pas dans la scène.</summary>
+    /// <remarks>
+    /// La température de blanc est préférée à une couleur RVB quand la scène demande
+    /// du blanc : une ampoule à blanc réglable la rend nettement mieux qu'une
+    /// approximation, et 160 mireds donne un vrai froid là où <c>#F2F6FF</c> tirait
+    /// au blafard.
+    /// </remarks>
     private static IEnumerable<SceneStep> Light(
-        string? deviceId, bool on, int? brightness = null, string? color = null)
+        string? deviceId,
+        bool on,
+        int? brightness = null,
+        string? color = null,
+        int? mired = null,
+        double? transition = null)
     {
         if (string.IsNullOrWhiteSpace(deviceId))
         {
@@ -119,6 +131,8 @@ public static class SceneSeed
             DeviceId: deviceId,
             On: on,
             Brightness: on ? brightness : null,
-            ColorHex: on ? color : null);
+            ColorHex: on ? color : null,
+            ColorTempMired: on ? mired : null,
+            TransitionSec: transition);
     }
 }

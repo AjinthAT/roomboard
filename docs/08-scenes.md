@@ -29,7 +29,7 @@ un interpréteur.
 | `audio.setOutput` | `deviceId`, `outputId` |
 | `audio.setVolume` | `deviceId`, `level` |
 | `audio.setMute` | `deviceId`, `muted` |
-| `light.set` | `deviceId`, `on`, `brightness?`, `colorHex?` |
+| `light.set` | `deviceId`, `on`, `brightness?`, `colorHex?`, `colorTempMired?`, `effect?`, `transitionSec?` |
 | `music.transfer` | — |
 | `music.play` / `music.pause` | `uri?` |
 | `music.setVolume` | `level` |
@@ -92,10 +92,10 @@ s'éteint — mais la scène rapporterait un échec à chaque exécution, et une
 > déclaré est **omise** à la génération, pas écrite puis vouée à l'échec. Tant qu'une
 > seule ampoule est appairée, les scènes ne parlent que d'elle.
 >
-> Le blanc froid de **Work** est approché par une couleur (`#F2F6FF`) : le DSL n'a pas
-> de champ de température de couleur.
+> **Résolu le 2026-09-19.** Le DSL a gagné `colorTempMired`, et les scènes l'utilisent
+> là où elles demandent du blanc. La mesure a tranché : une température demandée est
+> reproduite **exactement** (160 mireds relus 160), alors qu'une couleur RVB dérive
+> dans le gamut de l'ampoule. `#F2F6FF` ne pouvait pas faire ce que fait `160`.
 >
-> **À rouvrir** : l'ampoule appairée en M4, une Philips Hue *white ambiance and
-> color*, gère nativement la température de 154 à 455 mireds. Une approximation RVB
-> rendra sans doute moins bien qu'un vrai `color_temp`. À juger à l'œil avant
-> d'ajouter un champ au DSL pour une seule scène.
+> Le DSL a aussi gagné `transitionSec` : les scènes fondent au lieu de claquer. Night
+> éteint en cinq secondes, Chill monte en trois.
