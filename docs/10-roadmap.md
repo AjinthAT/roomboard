@@ -20,8 +20,8 @@ Vérifié le 2026-09-18 :
 - Bundle : **70,4 Ko gzip** sur un budget de 200 Ko.
 
 Restent à confirmer par l'utilisateur, hors de portée de la machine :
-- [ ] Page réellement affichée sur l'iPad
-- [ ] CI verte (nécessite un remote GitHub, pas encore configuré)
+- [x] Page réellement affichée sur l'iPad
+- [x] CI verte — dépôt public créé le 2026-09-18, trois jobs au vert
 
 ### Décisions prises pendant M0, absentes du pack initial
 - Le Core sert le front depuis `wwwroot` : une seule origine, donc pas de CORS,
@@ -66,9 +66,9 @@ Confirmé sur le matériel réel :
 - [x] Les quatre corrections de capteurs confirmées sur le matériel : CPU 12,2 % /
       51 °C, GPU 1 % / 41,6 °C, VRAM 2568 sur 16303 Mo, RAM 24,9 sur 63,7 Go.
 Restent à éprouver, en conditions réelles :
-- [ ] Réveil effectif du PC (WoL activé dans le BIOS **et** sur la carte Intel)
-- [ ] Extinction et redémarrage déclenchés depuis l'iPad
-- [ ] Carte PC affichée sur l'iPad
+- [x] Réveil effectif du PC
+- [x] Extinction et redémarrage déclenchés depuis l'iPad
+- [x] Carte PC affichée sur l'iPad
 
 ### Décisions prises pendant M1
 - **Aucun secret en base.** `AgentToken` suit la même règle qu'`ApiToken` : variable
@@ -127,7 +127,7 @@ Vérifié le 2026-09-18 :
 - Sondage mesuré à **3,1 s** en lecture, conforme aux 3 s attendues.
 
 Reste à éprouver :
-- [ ] Contrôles précédent / lecture / suivant depuis l'iPad
+- [x] Contrôles précédent / lecture / suivant depuis l'iPad
 - [ ] Comportement Spotify fermé (doit afficher « aucun appareil actif », pas planter)
 - [ ] Renouvellement du jeton après une heure
 
