@@ -38,6 +38,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     return undefined as T;
   }
 
+  // Beaucoup de routes acquittent sans rien renvoyer : 200 sur un PUT, 202 sur une
+  // commande. `response.json()` sur un corps vide lève, et Safari le formule
+  // « The string did not match the expected pattern » — ce message s'affichait tel
+  // quel dans le bandeau alors que l'action avait réussi. On ne lit le corps que
+  // s'il y en a un.
+  if (!(response.headers.get('Content-Type') ?? '').includes('application/json')) {
+    return undefined as T;
+  }
+
   return (await response.json()) as T;
 }
 

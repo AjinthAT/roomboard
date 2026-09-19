@@ -105,6 +105,15 @@ scènes pour `pc.wake`.
 }
 ```
 
+### Réponses sans corps
+
+Un `PUT` répond **200 sans corps**, une commande asynchrone **202 sans corps** (sauf
+celles qui renvoient un `commandId` ou un `runId`). Le client ne doit lire le corps
+que si l'en-tête `Content-Type` annonce du JSON : appeler `response.json()` sur un
+corps vide lève, et Safari formule cet échec
+« The string did not match the expected pattern ». L'action avait réussi, mais le
+bandeau affichait une erreur.
+
 ## SignalR — hub client `/hub/room`
 
 Le serveur pousse (le client n'appelle aucune méthode, il utilise REST pour agir) :

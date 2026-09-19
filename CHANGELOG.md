@@ -31,6 +31,13 @@ Le projet ne suit pas SemVer : il suit ses jalons.
   l'écran plutôt que caché.
 
 ### Corrigé
+- **Toute action réussie sans corps de réponse affichait une erreur.** Un `PUT` répond
+  200 sans corps, une commande 202 sans corps ; le client appelait quand même
+  `response.json()`, qui lève sur un corps vide. Safari formule cet échec
+  « The string did not match the expected pattern », affiché tel quel dans le bandeau.
+  Le défaut existait depuis M4 : régler une lampe, activer une routine, mettre en
+  pause ou enregistrer une scène le déclenchaient, alors que l'action passait. Le
+  client ne lit plus le corps que si `Content-Type` annonce du JSON.
 - **Les identifiants de scènes gardaient les accents** : « Soirée ciné » donnait
   `soirée`, encodé en `%C3%A9` dans chaque URL. Translittération explicite —
   `string.Normalize` lèverait ici, le Core tourne en globalisation invariante.
