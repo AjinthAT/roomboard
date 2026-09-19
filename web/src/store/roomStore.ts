@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type {
   AudioSnapshot, LightSnapshot, LightStateChanged, MusicState, PcSnapshot,
-  SceneInfo, StateSnapshot, Telemetry,
+  RoutineInfo, SceneInfo, StateSnapshot, Telemetry,
 } from '../api/types';
 import { MusicLink } from '../api/types';
 
@@ -14,6 +14,7 @@ export type RoomState = {
   lights: LightSnapshot[];
   music: MusicState;
   scenes: SceneInfo[];
+  routines: RoutineInfo[];
   /** Exécution en cours ou dernière terminée, pour le retour de progression. */
   sceneRun: SceneRunView | null;
   connection: ConnectionStatus;
@@ -39,9 +40,12 @@ const NO_LIGHTS: LightSnapshot[] = [];
 
 const NO_SCENES: SceneInfo[] = [];
 
+const NO_ROUTINES: RoutineInfo[] = [];
+
 const EMPTY: RoomState = {
   roomName: '', pc: null, audio: null, lights: NO_LIGHTS,
-  music: NO_MUSIC, scenes: NO_SCENES, sceneRun: null, connection: 'connecting',
+  music: NO_MUSIC, scenes: NO_SCENES, routines: NO_ROUTINES,
+  sceneRun: null, connection: 'connecting',
 };
 
 /**
@@ -95,7 +99,20 @@ class RoomStore {
       lights: snapshot.lights,
       music: snapshot.music,
       scenes: snapshot.scenes,
+      routines: snapshot.routines,
     });
+  }
+
+  patchRoutine(id: string, patch: Partial<RoutineInfo>): void {
+    const index = this.state.routines.findIndex((r) => r.id === id);
+
+    if (index === -1) {
+      return;
+    }
+
+    const routines = [...this.state.routines];
+    routines[index] = { ...routines[index], ...patch };
+    this.set({ routines });
   }
 
   sceneStarted(runId: string, sceneId: string): void {

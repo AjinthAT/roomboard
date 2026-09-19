@@ -13,6 +13,7 @@ using RoomOS.Core.Integrations.Mqtt;
 using RoomOS.Core.Observability;
 using RoomOS.Core.Integrations.Spotify;
 using RoomOS.Core.Integrations.Wol;
+using RoomOS.Core.Routines;
 using RoomOS.Core.Scenes;
 using RoomOS.Core.Scenes.Executors;
 using RoomOS.Core.State;
@@ -50,6 +51,8 @@ builder.Services.AddSingleton<MqttLightService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<MqttLightService>());
 
 builder.Services.AddSingleton<SceneEngine>();
+builder.Services.AddSingleton<RoutineScheduler>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<RoutineScheduler>());
 builder.Services.AddSingleton<IStepExecutor, PcWakeExecutor>();
 builder.Services.AddSingleton<IStepExecutor, PcShutdownExecutor>();
 builder.Services.AddSingleton<IStepExecutor, AudioSetOutputExecutor>();
@@ -107,6 +110,7 @@ app.MapAudioEndpoints();
 app.MapMusicEndpoints();
 app.MapLightEndpoints();
 app.MapSceneEndpoints();
+app.MapRoutineEndpoints();
 app.MapMetricsEndpoint();
 
 app.MapHub<RoomHub>("/hub/room");

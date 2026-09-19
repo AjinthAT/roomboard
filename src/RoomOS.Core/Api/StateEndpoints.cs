@@ -65,6 +65,7 @@ public static class StateEndpoints
             await LightEndpoints.BuildSnapshotsAsync(db, state, mqtt, ct),
             state.Music,
             await SceneEndpoints.ListAsync(db, ct),
+            await RoutineEndpoints.ListAsync(db, ct),
             time.GetUtcNow());
 
         return Results.Ok(snapshot);
