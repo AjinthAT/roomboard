@@ -31,6 +31,18 @@ Une seule page. Pas de router. Grille 2×2 + barre de scènes.
 └─────────────────────────────────────┘
 ```
 
+### Écrans pleine page
+
+Trois écrans sortent de la grille, parce qu'ils demandent de la place et qu'on n'y
+reste pas : le détail d'une lampe, le navigateur Spotify et l'éditeur de scènes. Ce
+sont des boîtes de dialogue plein écran, pas des routes — le fond reste vivant
+derrière, et fermer ramène à l'écran d'accueil sans rechargement.
+
+L'éditeur de scènes est **piloté par une table de types d'étapes** : chaque type
+déclare les champs qu'il expose, et l'écran se construit à partir de là. Ajouter un
+type au DSL n'oblige donc pas à réécrire l'écran. C'est la seule façon de garder onze
+types lisibles dans un seul composant.
+
 ## Règles de performance (non négociables)
 
 1. **La télémétrie ne passe pas par le state React global.** Utiliser un store externe

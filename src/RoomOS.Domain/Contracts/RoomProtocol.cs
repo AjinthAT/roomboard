@@ -14,9 +14,18 @@ public static class RoomProtocol
     public const string SceneStarted = "SceneStarted";
     public const string SceneStepCompleted = "SceneStepCompleted";
     public const string SceneFinished = "SceneFinished";
+    public const string CatalogChanged = "CatalogChanged";
 }
 
 public sealed record PcStateChanged(string Id, bool Online, long? UptimeSec);
+
+/// <summary>
+/// Le catalogue de scènes et de routines a changé. Il est diffusé en entier : il fait
+/// une dizaine de lignes, et un delta ici coûterait plus cher à maintenir qu'à envoyer.
+/// </summary>
+public sealed record CatalogChanged(
+    IReadOnlyList<SceneInfo> Scenes,
+    IReadOnlyList<RoutineInfo> Routines);
 
 public sealed record TelemetryUpdated(string Id, Telemetry Telemetry);
 

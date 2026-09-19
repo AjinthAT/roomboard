@@ -13,6 +13,9 @@ public static class MusicEndpoints
     public sealed record PlayRequest(string? Uri);
     public sealed record VolumeRequest(int Level);
     public sealed record TransferRequest(string DeviceId);
+    public sealed record ShuffleRequest(bool Enabled);
+    public sealed record RepeatRequest(string Mode);
+    public sealed record SeekRequest(int PositionMs);
 
     public static IEndpointRouteBuilder MapMusicEndpoints(this IEndpointRouteBuilder app)
     {
@@ -47,6 +50,29 @@ public static class MusicEndpoints
 
         group.MapPost("/transfer", (TransferRequest body, IMusicProvider music, CancellationToken ct) =>
             Guard(ct => music.TransferToDeviceAsync(body.DeviceId, ct), ct));
+
+        group.MapPut("/shuffle", (ShuffleRequest body, IMusicProvider music, CancellationToken ct) =>
+            Guard(ct => music.SetShuffleAsync(body.Enabled, ct), ct));
+
+        group.MapPut("/repeat", (RepeatRequest body, IMusicProvider music, CancellationToken ct) =>
+            body.Mode is "off" or "track" or "context"
+                ? Guard(ct => music.SetRepeatAsync(body.Mode, ct), ct)
+                : Task.FromResult(Results.BadRequest(new { message = "Mode inconnu." })));
+
+        group.MapPut("/seek", (SeekRequest body, IMusicProvider music, CancellationToken ct) =>
+            Guard(ct => music.SeekAsync(body.PositionMs, ct), ct));
+
+        group.MapGet("/queue", async (IMusicProvider music, CancellationToken ct) =>
+            Results.Ok(await music.GetQueueAsync(ct)));
+
+        group.MapPost("/queue", (PlayRequest body, IMusicProvider music, CancellationToken ct) =>
+            string.IsNullOrWhiteSpace(body.Uri)
+                ? Task.FromResult(Results.BadRequest(new { message = "Il faut un uri." }))
+                : Guard(ct => music.QueueAsync(body.Uri, ct), ct));
+
+        // Plafonnée à dix résultats par Spotify, pas par nous.
+        group.MapGet("/search", async (string q, IMusicProvider music, CancellationToken ct) =>
+            Results.Ok(await music.SearchAsync(q, ct)));
 
         group.MapPut("/volume", (VolumeRequest body, IMusicProvider music, CancellationToken ct) =>
             body.Level is < 0 or > 100

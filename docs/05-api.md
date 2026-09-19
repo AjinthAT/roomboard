@@ -35,6 +35,12 @@ L'agent utilise un token distinct (`ROOMOS__AgentToken`).
 | GET | `/api/music/devices` | Appareils Spotify visibles, pour renseigner `PcDeviceHint` |
 | POST | `/api/music/transfer` | `{ "deviceId": "..." }` — bascule la lecture sur un appareil |
 | GET | `/api/music/playlists` | Playlists mises en avant, depuis la configuration |
+| PUT | `/api/music/shuffle` | `{ "enabled": true }` |
+| PUT | `/api/music/repeat` | `{ "mode": "off" \| "track" \| "context" }` |
+| PUT | `/api/music/seek` | `{ "positionMs": 42000 }` |
+| GET | `/api/music/queue` | File d'attente |
+| POST | `/api/music/queue` | `{ "uri": "spotify:track:..." }` |
+| GET | `/api/music/search?q=` | Recherche, **plafonnée à 10** par Spotify |
 | POST | `/api/music/play` | `{ "uri": "spotify:playlist:..." }` (uri optionnel) |
 | POST | `/api/music/pause` | |
 | POST | `/api/music/next` | |
@@ -43,7 +49,15 @@ L'agent utilise un token distinct (`ROOMOS__AgentToken`).
 | GET | `/api/music/authorize` | 302 vers Spotify. **Non authentifiée** : parcourue par un navigateur sans jeton. |
 | GET | `/api/music/callback` | Retour du flux PKCE. **Non authentifiée**, protégée par le couple `state` / `code_verifier`. |
 | GET | `/api/scenes` | Liste |
+| GET | `/api/scenes/{id}` | Une scène avec ses étapes, pour l'éditeur |
+| POST | `/api/scenes` | Crée une scène. L'identifiant dérive du nom |
+| PUT | `/api/scenes/{id}` | Renomme, change l'icône ou remplace les étapes |
+| DELETE | `/api/scenes/{id}` | Refusé si une routine l'utilise |
 | POST | `/api/scenes/{id}/run` | 202 + `runId` |
+| GET | `/api/routines` | Liste |
+| POST | `/api/routines` | Crée une routine, **désactivée** |
+| PUT | `/api/routines/{id}` | Heure, jours, scène, nom, activation |
+| DELETE | `/api/routines/{id}` | |
 | GET | `/api/scenes/runs/{runId}` | État d'exécution + log des étapes |
 | GET | `/healthz` | 200 si le Core est vivant |
 | GET | `/metrics` | Format Prometheus (M6) |
@@ -105,6 +119,12 @@ Le serveur pousse (le client n'appelle aucune méthode, il utilise REST pour agi
 | `SceneStarted` | `{ runId, sceneId }` |
 | `SceneStepCompleted` | `{ runId, stepIndex, status, message }` |
 | `SceneFinished` | `{ runId, status }` |
+| `CatalogChanged` | `{ scenes, routines }` — après toute création, modification ou suppression |
+
+> **Pourquoi `CatalogChanged` envoie les listes entières** : elles font une dizaine de
+> lignes, et un delta coûterait plus cher à maintenir qu'à transmettre. Sans cet
+> événement, l'iPad qui n'a pas fait l'édition garderait son ancienne liste jusqu'à un
+> rechargement — or un panneau mural n'est jamais rechargé à la main.
 
 > **Sur le plafond 1 Hz** : l'agent publie toutes les 2 s (`06-agent-windows.md`),
 > soit 0,5 Hz. Le plafond serveur n'est donc jamais atteint en fonctionnement normal.

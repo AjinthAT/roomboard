@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
-  UnauthorizedError, getMusicDevices, getPlaylists, playUri, setMusicVolume, transferMusic,
+  UnauthorizedError, getMusicDevices, getPlaylists, playUri, seekMusic, setMusicVolume,
+  setRepeat, setShuffle, transferMusic,
 } from '../api/client';
 import type { MusicDevice, Playlist } from '../api/types';
 import { roomStore, useRoom } from '../store/roomStore';
@@ -40,10 +41,71 @@ export function TrackProgress() {
   return (
     <div className="flex items-center gap-3 text-xs tabular-nums text-neutral-600">
       <span>{formatTime(position)}</span>
-      <div className="h-1 flex-1 overflow-hidden rounded-full bg-neutral-900">
-        <div className="h-full rounded-full bg-neutral-500" style={{ width: `${percent}%` }} />
-      </div>
+      {/* Cliquable : on se déplace dans le morceau en touchant la barre. La zone
+          tactile fait 44 px de haut, la barre visible n'en fait qu'une poignée. */}
+      <button
+        type="button"
+        aria-label="Se déplacer dans le morceau"
+        className="flex h-11 flex-1 items-center"
+        onPointerDown={(e) => {
+          const box = e.currentTarget.getBoundingClientRect();
+          const ratio = Math.min(1, Math.max(0, (e.clientX - box.left) / box.width));
+          void seekMusic(Math.round(ratio * durationMs)).catch(() => undefined);
+        }}
+      >
+        <span className="block h-1 w-full overflow-hidden rounded-full bg-neutral-900">
+          <span className="block h-full rounded-full bg-neutral-500" style={{ width: `${percent}%` }} />
+        </span>
+      </button>
       <span>{formatTime(durationMs)}</span>
+    </div>
+  );
+}
+
+/** Lecture aléatoire et répétition, à côté des contrôles de transport. */
+export function PlayModes({ usable, onError }: { usable: boolean; onError: (m: string) => void }) {
+  const shuffle = useRoom((s) => s.music.nowPlaying.shuffle);
+  const repeat = useRoom((s) => s.music.nowPlaying.repeat);
+
+  // off -> tout le contexte -> le morceau seul -> off. Le même bouton fait le tour,
+  // comme sur n'importe quel lecteur.
+  const nextRepeat = repeat === 'off' ? 'context' : repeat === 'context' ? 'track' : 'off';
+  const repeatLabel = repeat === 'track' ? '🔂' : '🔁';
+
+  function run(action: () => Promise<unknown>) {
+    action().catch((cause: unknown) =>
+      onError(cause instanceof Error ? cause.message : 'Échec'));
+  }
+
+  return (
+    <div className="flex gap-3">
+      <button
+        type="button"
+        disabled={!usable}
+        aria-pressed={shuffle}
+        aria-label="Lecture aléatoire"
+        onClick={() => run(() => setShuffle(!shuffle))}
+        className={`min-h-11 flex-1 rounded-lg border text-sm transition-colors disabled:opacity-40 ${
+          shuffle
+            ? 'border-neutral-500 bg-neutral-800 text-neutral-100'
+            : 'border-neutral-800 bg-neutral-900 text-neutral-500'
+        }`}
+      >
+        🔀
+      </button>
+      <button
+        type="button"
+        disabled={!usable}
+        aria-label="Répétition"
+        onClick={() => run(() => setRepeat(nextRepeat))}
+        className={`min-h-11 flex-1 rounded-lg border text-sm transition-colors disabled:opacity-40 ${
+          repeat !== 'off'
+            ? 'border-neutral-500 bg-neutral-800 text-neutral-100'
+            : 'border-neutral-800 bg-neutral-900 text-neutral-500'
+        }`}
+      >
+        {repeatLabel}
+      </button>
     </div>
   );
 }

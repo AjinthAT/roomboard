@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { UnauthorizedError, runScene } from '../api/client';
 import { useRoom } from '../store/roomStore';
+import { SceneEditor } from './SceneEditor';
 import { useConfirm } from './useConfirm';
 
 export function SceneBar({ onUnauthorized }: { onUnauthorized: () => void }) {
   const scenes = useRoom((s) => s.scenes);
   const live = useRoom((s) => s.connection === 'connected');
   const [error, setError] = useState<string | null>(null);
-
-  if (scenes.length === 0) {
-    return null;
-  }
+  const [editing, setEditing] = useState(false);
+  // `null` = création, une chaîne = la scène ouverte, `undefined` = éditeur fermé.
+  const [edited, setEdited] = useState<string | null | undefined>(undefined);
 
   async function launch(id: string) {
     setError(null);
@@ -27,6 +27,22 @@ export function SceneBar({ onUnauthorized }: { onUnauthorized: () => void }) {
 
   return (
     <section className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Scènes</h2>
+        <button
+          type="button"
+          onClick={() => setEditing((v) => !v)}
+          aria-pressed={editing}
+          className={`min-h-9 rounded-lg border px-3 text-xs ${
+            editing
+              ? 'border-neutral-600 bg-neutral-800 text-neutral-200'
+              : 'border-neutral-800 text-neutral-500 active:bg-neutral-900'
+          }`}
+        >
+          {editing ? 'Terminé' : 'Modifier'}
+        </button>
+      </div>
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {scenes.map((scene) => (
           <SceneButton
@@ -35,14 +51,35 @@ export function SceneBar({ onUnauthorized }: { onUnauthorized: () => void }) {
             name={scene.name}
             destructive={scene.destructive}
             live={live}
+            editing={editing}
             onRun={launch}
+            onEdit={setEdited}
           />
         ))}
+
+        {editing && (
+          <button
+            type="button"
+            onClick={() => setEdited(null)}
+            className="min-h-14 rounded-xl border border-dashed border-neutral-700 px-4 text-base text-neutral-400 active:bg-neutral-900"
+          >
+            + Nouvelle
+          </button>
+        )}
       </div>
 
       <SceneProgress />
 
       {error && <p className="text-xs text-red-400">{error}</p>}
+
+      {edited !== undefined && (
+        <SceneEditor
+          sceneId={edited}
+          onError={setError}
+          onClose={() => setEdited(undefined)}
+          onSaved={() => setError(null)}
+        />
+      )}
     </section>
   );
 }
@@ -52,13 +89,17 @@ function SceneButton({
   name,
   destructive,
   live,
+  editing,
   onRun,
+  onEdit,
 }: {
   id: string;
   name: string;
   destructive: boolean;
   live: boolean;
+  editing: boolean;
   onRun: (id: string) => void;
+  onEdit: (id: string) => void;
 }) {
   const running = useRoom((s) => s.sceneRun?.sceneId === id && s.sceneRun.status === 'running');
   const { armed, arm, disarm } = useConfirm();
@@ -66,6 +107,11 @@ function SceneButton({
   // Night éteint le PC. Le caractère sensible vient du serveur, qui le déduit des
   // étapes : aucune scène n'est traitée à part par son nom.
   function handle() {
+    if (editing) {
+      onEdit(id);
+      return;
+    }
+
     if (destructive && !armed) {
       arm();
       return;
@@ -78,14 +124,16 @@ function SceneButton({
   return (
     <button
       type="button"
-      disabled={!live}
+      disabled={!live && !editing}
       onClick={handle}
       className={`min-h-14 rounded-xl border px-4 text-base transition-colors disabled:opacity-40 ${
-        armed
-          ? 'border-amber-600 bg-amber-950/40 text-amber-200'
-          : running
-            ? 'border-neutral-500 bg-neutral-800 text-neutral-100'
-            : 'border-neutral-800 bg-neutral-900 text-neutral-300 active:bg-neutral-800'
+        editing
+          ? 'border-dashed border-neutral-600 bg-neutral-900 text-neutral-300'
+          : armed
+            ? 'border-amber-600 bg-amber-950/40 text-amber-200'
+            : running
+              ? 'border-neutral-500 bg-neutral-800 text-neutral-100'
+              : 'border-neutral-800 bg-neutral-900 text-neutral-300 active:bg-neutral-800'
       }`}
     >
       {armed ? 'Confirmer ?' : name}

@@ -44,6 +44,16 @@ export type NowPlaying = {
   progressMs: number | null;
   durationMs: number | null;
   deviceName: string | null;
+  shuffle: boolean;
+  /** « off », « track » ou « context ». */
+  repeat: string;
+};
+
+export type MusicTrack = {
+  uri: string;
+  title: string;
+  artist: string;
+  albumArtUrl: string | null;
 };
 
 /** Sérialisé en nombre par System.Text.Json, dans l'ordre de déclaration de l'enum C#. */
@@ -101,6 +111,34 @@ export type SceneInfo = {
   /** Vrai si la scène éteint un PC : l'UI demande alors une confirmation. */
   destructive: boolean;
 };
+
+/** Une étape du DSL. Tous les champs sont facultatifs sauf le type. */
+export type SceneStep = {
+  type: string;
+  deviceId?: string | null;
+  outputId?: string | null;
+  level?: number | null;
+  muted?: boolean | null;
+  on?: boolean | null;
+  brightness?: number | null;
+  colorHex?: string | null;
+  uri?: string | null;
+  ms?: number | null;
+  waitForOnline?: boolean;
+  timeoutSec?: number | null;
+  colorTempMired?: number | null;
+  effect?: string | null;
+  transitionSec?: number | null;
+};
+
+export type SceneDetail = {
+  id: string;
+  name: string;
+  icon: string;
+  steps: SceneStep[];
+};
+
+export type CatalogChanged = { scenes: SceneInfo[]; routines: RoutineInfo[] };
 
 export type SceneStarted = { runId: string; sceneId: string };
 export type SceneStepCompleted = {

@@ -3,7 +3,8 @@ import { UnauthorizedError, runMusicAction } from '../api/client';
 import type { MusicAction } from '../api/client';
 import { MusicLink } from '../api/types';
 import { useRoom } from '../store/roomStore';
-import { DevicePicker, MusicVolume, Playlists, TrackProgress } from './MusicExtras';
+import { MusicBrowser } from './MusicBrowser';
+import { DevicePicker, MusicVolume, PlayModes, Playlists, TrackProgress } from './MusicExtras';
 
 export function MusicCard({ onUnauthorized }: { onUnauthorized: () => void }) {
   const link = useRoom((s) => s.music.link);
@@ -12,6 +13,7 @@ export function MusicCard({ onUnauthorized }: { onUnauthorized: () => void }) {
   const isPlaying = useRoom((s) => s.music.nowPlaying.isPlaying);
 
   const [error, setError] = useState<string | null>(null);
+  const [browsing, setBrowsing] = useState(false);
 
   async function run(action: MusicAction) {
     setError(null);
@@ -30,6 +32,13 @@ export function MusicCard({ onUnauthorized }: { onUnauthorized: () => void }) {
     <section className="flex flex-col gap-5 rounded-2xl border border-neutral-800 bg-neutral-950 p-6">
       <header className="flex items-baseline justify-between">
         <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">Musique</h2>
+        <button
+          type="button"
+          onClick={() => setBrowsing(true)}
+          className="min-h-9 rounded-lg border border-neutral-800 px-3 text-xs text-neutral-500 active:bg-neutral-900"
+        >
+          Rechercher
+        </button>
         {link === MusicLink.NoActiveDevice && (
           <span className="text-sm text-neutral-500">Aucun appareil actif</span>
         )}
@@ -57,6 +66,7 @@ export function MusicCard({ onUnauthorized }: { onUnauthorized: () => void }) {
 
       {link !== MusicLink.NotLinked && (
         <>
+          <PlayModes usable={live} onError={setError} />
           <MusicVolume usable={live} onError={setError} />
           <DevicePicker usable={live} onError={setError} onUnauthorized={onUnauthorized} />
           <Playlists usable={live} onError={setError} />
@@ -64,6 +74,8 @@ export function MusicCard({ onUnauthorized }: { onUnauthorized: () => void }) {
       )}
 
       {error && <p className="text-xs text-red-400">{error}</p>}
+
+      {browsing && <MusicBrowser onError={setError} onClose={() => setBrowsing(false)} />}
     </section>
   );
 }

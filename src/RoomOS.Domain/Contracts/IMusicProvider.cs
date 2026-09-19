@@ -37,7 +37,27 @@ public interface IMusicProvider
 
     /// <summary>Transfère la lecture vers un appareil désigné par son identifiant.</summary>
     Task TransferToDeviceAsync(string deviceId, CancellationToken ct);
+
+    Task SetShuffleAsync(bool enabled, CancellationToken ct);
+
+    /// <summary>« off », « track » ou « context ».</summary>
+    Task SetRepeatAsync(string mode, CancellationToken ct);
+
+    Task SeekAsync(int positionMs, CancellationToken ct);
+
+    /// <summary>File d'attente. Le premier élément est le morceau suivant.</summary>
+    Task<IReadOnlyList<MusicTrack>> GetQueueAsync(CancellationToken ct);
+
+    Task QueueAsync(string uri, CancellationToken ct);
+
+    /// <summary>
+    /// Recherche dans le catalogue. Plafonnée à dix résultats par Spotify depuis
+    /// février 2026 (docs/09-integrations.md).
+    /// </summary>
+    Task<IReadOnlyList<MusicTrack>> SearchAsync(string query, CancellationToken ct);
 }
+
+public sealed record MusicTrack(string Uri, string Title, string Artist, string? AlbumArtUrl);
 
 public sealed record MusicDevice(string Id, string Name, bool IsActive, string Type);
 

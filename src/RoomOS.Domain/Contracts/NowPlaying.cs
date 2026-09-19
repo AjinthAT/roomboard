@@ -11,7 +11,10 @@ public sealed record NowPlaying(
     bool IsPlaying,
     int? ProgressMs,
     int? DurationMs,
-    string? DeviceName)
+    string? DeviceName,
+    bool Shuffle = false,
+    /// <summary>« off », « track » ou « context ».</summary>
+    string Repeat = "off")
 {
     /// <summary>Rien à afficher : Spotify fermé ou aucun appareil actif.</summary>
     public static readonly NowPlaying Nothing = new(null, null, null, false, null, null, null);

@@ -55,6 +55,26 @@ Pas d'autre type en V1. Pas de condition, pas de boucle, pas de branche.
 5. Une seule exécution de scène à la fois par pièce. Une nouvelle demande annule la précédente.
 6. **Idempotence** : relancer « Gaming » alors que tout est déjà en place ne doit rien casser.
 
+## Validation à l'écriture
+
+Depuis l'éditeur de scènes, le DSL n'est plus seulement généré : il est écrit depuis
+l'iPad. `POST` et `PUT /api/scenes` refusent donc, en 400, une scène qui ne pourrait
+pas s'exécuter :
+
+- type d'étape inconnu ;
+- étape visant un appareil sans `deviceId`, ou pointant vers un appareil absent de la
+  base, ou du mauvais type (`light.set` sur un PC) ;
+- `audio.setOutput` sans `outputId` ;
+- plus de 50 étapes.
+
+C'est le pendant de la règle 3 : une étape en échec n'interrompt pas la scène, donc
+une scène fausse s'exécute en silence et n'échoue que partiellement, le soir, sans
+personne devant un journal. Autant refuser à l'enregistrement, quand quelqu'un
+regarde l'écran.
+
+Ce qui n'est **pas** validé : les valeurs hors bornes, laissées aux exécuteurs et à
+Zigbee2MQTT, et l'existence d'une sortie audio — la liste dépend d'un PC allumé.
+
 ## Tests exigés
 
 - Une scène vide se termine en `completed`.

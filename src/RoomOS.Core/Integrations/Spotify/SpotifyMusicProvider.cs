@@ -155,6 +155,75 @@ public sealed class SpotifyMusicProvider(
         SendAsync(HttpMethod.Put, "/me/player",
             new { device_ids = new[] { deviceId }, play = false }, ct);
 
+    public Task SetShuffleAsync(bool enabled, CancellationToken ct) =>
+        SendAsync(HttpMethod.Put, $"/me/player/shuffle?state={(enabled ? "true" : "false")}", null, ct);
+
+    public Task SetRepeatAsync(string mode, CancellationToken ct) =>
+        mode is "off" or "track" or "context"
+            ? SendAsync(HttpMethod.Put, $"/me/player/repeat?state={mode}", null, ct)
+            : throw new InvalidOperationException($"Mode de répétition « {mode} » inconnu.");
+
+    public Task SeekAsync(int positionMs, CancellationToken ct) =>
+        SendAsync(HttpMethod.Put, $"/me/player/seek?position_ms={Math.Max(0, positionMs)}", null, ct);
+
+    public Task QueueAsync(string uri, CancellationToken ct) =>
+        SendAsync(HttpMethod.Post, $"/me/player/queue?uri={Uri.EscapeDataString(uri)}", null, ct);
+
+    public async Task<IReadOnlyList<MusicTrack>> GetQueueAsync(CancellationToken ct)
+    {
+        var json = await GetJsonAsync("/me/player/queue", ct);
+
+        return json?.GetPropertyOrNull("queue") is { ValueKind: JsonValueKind.Array } queue
+            ? [.. queue.EnumerateArray().Select(ReadTrack).Where(t => t is not null).Select(t => t!)]
+            : [];
+    }
+
+    public async Task<IReadOnlyList<MusicTrack>> SearchAsync(string query, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return [];
+        }
+
+        // limit=10 : plafond imposé par Spotify, pas un choix.
+        var json = await GetJsonAsync(
+            $"/search?q={Uri.EscapeDataString(query)}&type=track&limit=10", ct);
+
+        return json?.GetPropertyOrNull("tracks")?.GetPropertyOrNull("items")
+            is { ValueKind: JsonValueKind.Array } items
+            ? [.. items.EnumerateArray().Select(ReadTrack).Where(t => t is not null).Select(t => t!)]
+            : [];
+    }
+
+    private async Task<JsonElement?> GetJsonAsync(string path, CancellationToken ct)
+    {
+        var client = await AuthorizedClientAsync(ct);
+
+        if (client is null)
+        {
+            return null;
+        }
+
+        using (client)
+        {
+            using var response = await client.GetAsync(ApiBase + path, ct);
+
+            return response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<JsonElement>(ct)
+                : null;
+        }
+    }
+
+    private static MusicTrack? ReadTrack(JsonElement item)
+    {
+        var uri = item.GetPropertyOrNull("uri")?.GetString();
+        var title = item.GetPropertyOrNull("name")?.GetString();
+
+        return uri is null || title is null
+            ? null
+            : new MusicTrack(uri, title, JoinArtists(item) ?? "", SmallestCover(item));
+    }
+
     private async Task SendAsync(HttpMethod method, string path, object? body, CancellationToken ct)
     {
         var client = await AuthorizedClientAsync(ct)
@@ -221,7 +290,9 @@ public sealed class SpotifyMusicProvider(
             IsPlaying: player.GetPropertyOrNull("is_playing")?.GetBoolean() ?? false,
             ProgressMs: player.GetPropertyOrNull("progress_ms")?.GetInt32(),
             DurationMs: item.GetPropertyOrNull("duration_ms")?.GetInt32(),
-            DeviceName: player.GetPropertyOrNull("device")?.GetPropertyOrNull("name")?.GetString());
+            DeviceName: player.GetPropertyOrNull("device")?.GetPropertyOrNull("name")?.GetString(),
+            Shuffle: player.GetPropertyOrNull("shuffle_state")?.GetBoolean() ?? false,
+            Repeat: player.GetPropertyOrNull("repeat_state")?.GetString() ?? "off");
     }
 
     private static string? JoinArtists(JsonElement item)
