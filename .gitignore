@@ -18,6 +18,13 @@ src/RoomOS.Core/wwwroot/
 *.db-shm
 *.db-wal
 
+# État de Zigbee2MQTT. coordinator_backup.json contient la clé réseau Zigbee :
+# le publier reviendrait à donner l'accès radio à quiconque est à portée.
+# Seul configuration.yaml est versionné, et encore : Z2M le réécrit à chaque
+# démarrage en supprimant les commentaires.
+deploy/zigbee2mqtt/*
+!deploy/zigbee2mqtt/configuration.yaml
+
 # Secrets et environnement
 .env
 !deploy/.env.example

@@ -117,6 +117,13 @@ ou SLZB-06 (Ethernet, plus pratique si la VM est sur un hôte sans USB dédié).
 - L'appairage se fait par l'UI de Zigbee2MQTT, pas par RoomOS. RoomOS consomme, il
   n'administre pas le réseau Zigbee.
 - Le mapping `deviceId RoomOS` ↔ `friendly_name Z2M` est dans `devices.config_json`.
+- **Zigbee2MQTT réécrit `configuration.yaml` à chaque démarrage** et supprime les
+  commentaires. Rien ne peut y être documenté durablement.
+- **`coordinator_backup.json` contient la clé du réseau Zigbee.** Il est ignoré par
+  git : le publier donnerait l'accès radio à quiconque est à portée. Il fait en
+  revanche partie de ce qu'il faut sauvegarder.
+- Le coordinateur SLZB-06 **ne répond pas au ping**. Pour le retrouver sur le réseau,
+  interroger le mDNS (`slzb-06.local`) plutôt que balayer les adresses.
 - Payload de commande typique :
   `{"state":"ON","brightness":153,"color":{"hex":"#FF6A00"}}`
 - `availability` de Z2M alimente le champ `reachable`.

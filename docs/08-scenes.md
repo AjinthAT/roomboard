@@ -93,5 +93,9 @@ s'éteint — mais la scène rapporterait un échec à chaque exécution, et une
 > seule ampoule est appairée, les scènes ne parlent que d'elle.
 >
 > Le blanc froid de **Work** est approché par une couleur (`#F2F6FF`) : le DSL n'a pas
-> de champ de température de couleur, et en ajouter un pour une seule scène ne se
-> justifie pas tant que le rendu réel n'a pas été jugé sur l'ampoule.
+> de champ de température de couleur.
+>
+> **À rouvrir** : l'ampoule appairée en M4, une Philips Hue *white ambiance and
+> color*, gère nativement la température de 154 à 455 mireds. Une approximation RVB
+> rendra sans doute moins bien qu'un vrai `color_temp`. À juger à l'œil avant
+> d'ajouter un champ au DSL pour une seule scène.
