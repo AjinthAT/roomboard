@@ -68,6 +68,10 @@ public static class DatabaseSeeder
         await db.SaveChangesAsync(ct);
         await SceneSeed.SeedAsync(db, options, ct);
 
+        // Après les scènes : une routine référence une scène.
+        await db.SaveChangesAsync(ct);
+        await RoutineSeed.SeedAsync(db, ct);
+
         await db.SaveChangesAsync(ct);
     }
 

@@ -6,6 +6,7 @@ import { AudioCard } from './components/AudioCard';
 import { LightsCard } from './components/LightsCard';
 import { MusicCard } from './components/MusicCard';
 import { PcCard } from './components/PcCard';
+import { RoutinesCard } from './components/RoutinesCard';
 import { SceneBar } from './components/SceneBar';
 import { TokenGate } from './components/TokenGate';
 import { roomStore, useRoom } from './store/roomStore';
@@ -107,6 +108,7 @@ export function App() {
         <MusicCard onUnauthorized={forgetToken} />
         <AudioCard onUnauthorized={forgetToken} />
         <LightsCard onUnauthorized={forgetToken} />
+        <RoutinesCard onUnauthorized={forgetToken} />
       </div>
 
       <SceneBar onUnauthorized={forgetToken} />

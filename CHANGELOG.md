@@ -5,6 +5,34 @@ Toutes les évolutions notables de RoomOS. Une entrée par jalon de `docs/10-roa
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 Le projet ne suit pas SemVer : il suit ses jalons.
 
+## Routines et refonte des lampes — 2026-09-19
+
+### Ajouté
+- **Routines** : une scène lancée à une heure donnée, certains jours. Elles
+  n'exécutent rien elles-mêmes — elles déclenchent le moteur de scènes, donc tout ce
+  qui a été éprouvé sur les scènes vaut pour elles. Deux routines de départ, Réveil
+  et Coucher, **désactivées** : une automatisation qui part le lendemain de
+  l'installation à une heure qu'on n'a pas choisie se retourne contre le produit.
+- **Fuseau explicite** (`ROOMOS__TimeZone`). Le conteneur tourne en UTC : sans
+  conversion, une routine réglée sur 7 h partirait à 9 h en heure d'été. Vérifié en
+  réel, déclenchement à la minute exacte.
+- **Roue de couleurs**, en remplacement des huit pastilles. Deux dégradés CSS
+  superposés, sans canvas ni dépendance, net à toute résolution.
+- **Vue détaillée par lampe**, en plein écran, avec onglets Couleur, Blanc et Effets.
+  La carte redevient une ligne par lampe.
+
+### Corrigé
+- **Les gestes continus n'agissaient qu'au relâchement.** Ma règle « pas de mise à
+  jour optimiste » était trop stricte pour un curseur : l'interface paraissait morte
+  sous le doigt. Envoi pendant le geste, limité à une commande toutes les 160 ms,
+  avec la dernière valeur garantie au relâchement. Mesuré à 6 commandes par seconde
+  sans perte.
+
+### Connu
+- Les exécuteurs de scènes marquent une étape réussie **dès l'envoi**, sans attendre
+  l'effet, alors que `03-architecture.md` règle 5 exige le contraire. Sans conséquence
+  observée : l'état réel revient par le hub en une centaine de millisecondes.
+
 ## Module lampes étendu — 2026-09-19
 
 Le périmètre V1 se limitait à « on/off, luminosité, couleur ». L'ampoule appairée en

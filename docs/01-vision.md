@@ -48,9 +48,12 @@ de contrôle, accessible en moins de deux secondes depuis un écran fixe.
 
 ## Hors périmètre V1, explicitement
 
-Prises connectées, capteurs (température, présence), TV, automatisations
-déclenchées par événement ou horaire, UI multi-pièces, accès depuis l'extérieur,
-multi-utilisateurs, historique long terme, application native.
+Prises connectées, capteurs (température, présence), TV, UI multi-pièces,
+multi-utilisateurs, application native.
+
+**Les automatisations horaires sont sorties du hors-périmètre le 2026-09-19**, après
+M6, comme le prévoyait le README. Une routine déclenche une scène : elle n'ajoute
+aucune logique d'exécution, seulement un déclencheur posé devant l'existant.
 
 ## Critère de réussite
 

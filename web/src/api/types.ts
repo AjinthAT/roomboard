@@ -111,6 +111,19 @@ export type SceneStepCompleted = {
 };
 export type SceneFinished = { runId: string; status: string };
 
+export type RoutineInfo = {
+  id: string;
+  name: string;
+  sceneId: string;
+  sceneName: string;
+  /** Heure locale, HH:mm. */
+  time: string;
+  /** Sept booléens, de lundi à dimanche. */
+  days: boolean[];
+  enabled: boolean;
+  lastFired: string | null;
+};
+
 export type StateSnapshot = {
   room: { id: string; name: string };
   pcs: PcSnapshot[];
@@ -118,6 +131,7 @@ export type StateSnapshot = {
   lights: LightSnapshot[];
   music: MusicState;
   scenes: SceneInfo[];
+  routines: RoutineInfo[];
   serverTime: string;
 };
 

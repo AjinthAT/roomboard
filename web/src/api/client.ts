@@ -89,6 +89,22 @@ export function setLight(id: string, command: LightCommand): Promise<unknown> {
   });
 }
 
+export type RoutinePatch = {
+  name?: string;
+  sceneId?: string;
+  time?: string;
+  days?: boolean[];
+  enabled?: boolean;
+};
+
+export function saveRoutine(id: string, patch: RoutinePatch): Promise<unknown> {
+  return request(`/api/routines/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+}
+
 export function runScene(id: string): Promise<{ runId: string }> {
   return request<{ runId: string }>(`/api/scenes/${encodeURIComponent(id)}/run`, {
     method: 'POST',

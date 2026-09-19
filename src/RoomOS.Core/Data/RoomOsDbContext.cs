@@ -10,6 +10,7 @@ public sealed class RoomOsDbContext(DbContextOptions<RoomOsDbContext> options) :
     public DbSet<AudioOutput> AudioOutputs => Set<AudioOutput>();
     public DbSet<IntegrationToken> IntegrationTokens => Set<IntegrationToken>();
     public DbSet<Scene> Scenes => Set<Scene>();
+    public DbSet<Routine> Routines => Set<Routine>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -70,6 +71,24 @@ public sealed class RoomOsDbContext(DbContextOptions<RoomOsDbContext> options) :
             scene.HasOne<Room>()
                 .WithMany()
                 .HasForeignKey(s => s.RoomId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Routine>(routine =>
+        {
+            routine.ToTable("routines");
+            routine.HasKey(r => r.Id);
+            routine.Property(r => r.Id).HasColumnName("id");
+            routine.Property(r => r.Name).HasColumnName("name").IsRequired();
+            routine.Property(r => r.SceneId).HasColumnName("scene_id").IsRequired();
+            routine.Property(r => r.MinuteOfDay).HasColumnName("minute_of_day");
+            routine.Property(r => r.Days).HasColumnName("days").IsRequired();
+            routine.Property(r => r.Enabled).HasColumnName("enabled");
+            routine.Property(r => r.SortOrder).HasColumnName("sort_order");
+
+            routine.HasOne<Scene>()
+                .WithMany()
+                .HasForeignKey(r => r.SceneId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

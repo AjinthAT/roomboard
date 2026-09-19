@@ -34,6 +34,12 @@ public sealed class RoomOsOptions
     public MqttOptions Mqtt { get; set; } = new();
 
     /// <summary>
+    /// Fuseau des routines. Le conteneur tourne en UTC : sans conversion explicite,
+    /// une routine à 7 h se déclencherait à 9 h en heure d'été.
+    /// </summary>
+    public string TimeZone { get; set; } = "Europe/Paris";
+
+    /// <summary>
     /// Lampes déclarées. Vide par défaut, pour la même raison que les sorties audio :
     /// le binder de configuration ajoute aux collections au lieu de les remplacer.
     /// </summary>
