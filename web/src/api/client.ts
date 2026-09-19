@@ -1,5 +1,7 @@
 import { readToken } from './token';
-import type { MusicDevice, Playlist, StateSnapshot } from './types';
+import type {
+  MusicDevice, MusicTrack, Playlist, SceneDetail, SceneStep, StateSnapshot,
+} from './types';
 
 /**
  * Le front n'appelle que le Core, sur la même origine : pas de base URL,
@@ -105,9 +107,85 @@ export function saveRoutine(id: string, patch: RoutinePatch): Promise<unknown> {
   });
 }
 
+export function getScene(id: string, signal?: AbortSignal): Promise<SceneDetail> {
+  return request<SceneDetail>(`/api/scenes/${encodeURIComponent(id)}`, { signal });
+}
+
+export function createScene(body: {
+  name: string; icon?: string; steps: SceneStep[];
+}): Promise<{ id: string }> {
+  return request<{ id: string }>('/api/scenes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+export function updateScene(
+  id: string,
+  body: { name?: string; icon?: string; steps?: SceneStep[] },
+): Promise<unknown> {
+  return request(`/api/scenes/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+export function deleteScene(id: string): Promise<unknown> {
+  return request(`/api/scenes/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+export function createRoutine(body: {
+  name: string; sceneId: string; time: string; days?: boolean[];
+}): Promise<{ id: string }> {
+  return request<{ id: string }>('/api/routines', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+export function deleteRoutine(id: string): Promise<unknown> {
+  return request(`/api/routines/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
 export function runScene(id: string): Promise<{ runId: string }> {
   return request<{ runId: string }>(`/api/scenes/${encodeURIComponent(id)}/run`, {
     method: 'POST',
+  });
+}
+
+export const setShuffle = (enabled: boolean) =>
+  putJson('/api/music/shuffle', { enabled });
+
+export const setRepeat = (mode: 'off' | 'track' | 'context') =>
+  putJson('/api/music/repeat', { mode });
+
+export const seekMusic = (positionMs: number) =>
+  putJson('/api/music/seek', { positionMs });
+
+export function getQueue(signal?: AbortSignal): Promise<MusicTrack[]> {
+  return request<MusicTrack[]>('/api/music/queue', { signal });
+}
+
+export function queueTrack(uri: string): Promise<unknown> {
+  return request('/api/music/queue', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uri }),
+  });
+}
+
+export function searchTracks(query: string, signal?: AbortSignal): Promise<MusicTrack[]> {
+  return request<MusicTrack[]>(`/api/music/search?q=${encodeURIComponent(query)}`, { signal });
+}
+
+function putJson(path: string, body: unknown): Promise<unknown> {
+  return request(path, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   });
 }
 
